@@ -3,7 +3,7 @@ import re
 
 import git
 
-logging.basicConfig(filename='app.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(filename='get_changed_methods.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
 
 DIFF_LINES_PATTERN = "\\n@@\s-\d+(?:,\d+)?\s\+(\d+)(?:,)?((?:\d+)?)"
 METHOD_NAME_PATTERN = ".*\s(.*?)\("
