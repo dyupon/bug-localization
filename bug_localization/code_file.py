@@ -5,7 +5,7 @@ from bug_localization.utils import get_matching_bracket
 
 logging.basicConfig(filename='code_file.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
 
-CLASS_NAME_PATTERN = r"(?<=\b\sclass\s)\w+|(?<=\b\sinterface\s)\w+"
+OBJECT_NAME_PATTERN = r"(?<=\b\sclass\s)\w+|(?<=\b\sinterface\s)\w+"
 
 
 def replace_by_pattern(obj: str, pattern: str):
@@ -63,12 +63,12 @@ def process_object(obj: str, obj_name: str):
     obj, _, _ = replace_by_pattern(obj, "{{")
     obj, _, _ = replace_by_pattern(obj, "{ {")
     # static initialization blocks
-    obj, static_open_idxs, static_clos_idxs = obj.replace_by_pattern("static {")
+    obj, static_open_idxs, static_clos_idxs = replace_by_pattern(obj, "static {")
     for static_open_idx, static_clos_idx in zip(static_open_idxs, static_clos_idxs):
         if static_open_idx == -1 and static_clos_idx == -1:
             continue
         methods[obj_name + ".<cinit>"] = [static_open_idx, static_clos_idx]
-    obj, static_open_idxs, static_clos_idxs = obj.replace_by_pattern("static{")
+    obj, static_open_idxs, static_clos_idxs = replace_by_pattern(obj, "static{")
     for static_open_idx, static_clos_idx in zip(static_open_idxs, static_clos_idxs):
         if static_open_idx == -1 and static_clos_idx == -1:
             continue
@@ -90,9 +90,8 @@ class CodeFile:
     Represents file with code for further manipulations with its objects and their methods
     """
 
-    def __init__(self, file, path, language='java'):
+    def __init__(self, file, language='java'):
         self.file = file
-        self.path = path
         self.language = language
         self.multiobject = False
         self.line_to_code = file.split("\n")
@@ -120,16 +119,19 @@ class CodeFile:
             object_open_line = line.find(" class ") if line.find(" class ") > -1 else line.find(" interface ")
             if object_open_line == -1:
                 continue
+            obj_name = re.findall(OBJECT_NAME_PATTERN, line)[0]
             object_open_idx = line.find("{")
-            if object_open_idx == -1:
-                while object_open_idx == -1:
-                    i += 1
-                    line = self.line_to_code[i]
-                    object_open_idx = line.find("{")
+            while object_open_idx == -1:
+                i += 1
+                line = self.line_to_code[i]
+                object_open_idx = line.find("{")
             object_open_idx += sum(self.line_to_count[0:i])
             object_clos_idx = get_matching_bracket(self.flat_file, object_open_idx)
-            object_name = re.findall(CLASS_NAME_PATTERN, line)[0]
-            object_borders[object_name] = [object_open_idx, object_clos_idx]
+            logging.info("get_objects_borders() found object = {} on lines {} - {}".
+                         format(obj_name,
+                                self.symbol_to_line[object_open_idx],
+                                self.symbol_to_line[object_clos_idx]))
+            object_borders[obj_name] = [object_open_idx, object_clos_idx]
         return object_borders
 
     def get_methods_borders(self):
@@ -139,14 +141,21 @@ class CodeFile:
         Reverse-order guarantees that methods of inner classes won't be messed up with methods of outer ones
         :return:
         """
+        result = {}
         object_borders = self.get_objects_borders()
         for obj_name in object_borders:
             borders = object_borders[obj_name]
             obj, object_methods = process_object(obj_name,
                                                  self.flat_file[borders[0]:borders[1]])
-            logging.info("get_methods_borders() for object = {}, lines {} - {}".format(obj_name,
-                                                                                       self.symbol_to_line[borders[0]],
-                                                                                       self.symbol_to_line[borders[1]]))
-            self.flat_file[borders[0]:borders[1]] = "x"*len(obj)
+            logging.info("get_methods_borders() processed object = {} on lines {} - {}".
+                         format(obj_name,
+                                self.symbol_to_line[borders[0]],
+                                self.symbol_to_line[borders[1]]))
+            ff_list = list(self.flat_file)
+            ff_list[borders[0]:borders[1]] = "x"*len(obj)
+            self.flat_file = "".join(ff_list)
+            for method in object_methods:
+                result[method] = [x + borders[0] for x in object_methods[method]]
         if len(object_borders) > 1:
             self.multiobject = True
+        return result
