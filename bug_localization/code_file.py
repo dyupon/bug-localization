@@ -163,5 +163,7 @@ class CodeFile:
             self.flat_file = "".join(ff_list)
             for method in object_methods:
                 method_borders = [x + borders[0] for x in object_methods[method]]
+                if obj_name == method:
+                    method = "<init>"
                 result[obj_name + "." + method] = [self.symbol_to_line[x] for x in method_borders]
         return result
