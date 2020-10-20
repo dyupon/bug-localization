@@ -6,6 +6,7 @@ from bug_localization.utils import get_matching_bracket
 logging.basicConfig(filename='code_file.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
 
 OBJECT_NAME_PATTERN = r"(?<=\b\sclass\s)\w+|(?<=\b\sinterface\s)\w+"
+METHOD_NAME_PATTERN = ".*\s(.*?)\("
 
 
 def replace_by_pattern(obj: str, pattern: str):
@@ -22,14 +23,14 @@ def replace_by_pattern(obj: str, pattern: str):
     """
     obj_list = list(obj)
     dist_to_open_idx = len(pattern) - 1
-    pattern_start_idx = [obj.find(pattern)]
+    pattern_start_idx = obj.find(pattern)
     clos_idxs = [-1]
     open_idxs = [-1]
-    if pattern_start_idx == [-1]:
+    if pattern_start_idx == -1:
         return obj, open_idxs, clos_idxs
     else:
         while pattern_start_idx > -1:
-            clos_idxs = clos_idxs.append(get_matching_bracket(obj, pattern_start_idx + dist_to_open_idx))
+            clos_idxs.append(get_matching_bracket(obj, pattern_start_idx + dist_to_open_idx))
             obj_list[pattern_start_idx + dist_to_open_idx] = "["
             obj_list[clos_idxs[-1]] = "]"
             logging.info(
@@ -78,8 +79,10 @@ def process_object(obj: str, obj_name: str):
     curr_pos = 0
     while method_open_idx > -1:
         method_clos_idx = get_matching_bracket(obj, method_open_idx)
+        curr_line = obj[0:method_open_idx]
+        method_name = re.findall(METHOD_NAME_PATTERN, curr_line)[0]
         obj = obj[method_clos_idx + 1:]
-        methods[obj_name] = [curr_pos + method_open_idx, method_clos_idx]
+        methods[method_name] = [curr_pos + method_open_idx, curr_pos + method_clos_idx]
         curr_pos += method_clos_idx + 1
         method_open_idx = obj.find("{")
     return obj, methods
@@ -143,19 +146,22 @@ class CodeFile:
         """
         result = {}
         object_borders = self.get_objects_borders()
-        for obj_name in object_borders:
+        if len(object_borders) > 1:
+            self.multiobject = True
+        for obj_name in reversed(object_borders):
             borders = object_borders[obj_name]
-            obj, object_methods = process_object(obj_name,
-                                                 self.flat_file[borders[0]:borders[1]])
+            if self.multiobject:
+                obj, object_methods = process_object(self.flat_file[borders[0] + 1:borders[1] - 1], obj_name)
+            else:
+                obj, object_methods = process_object(self.flat_file[borders[0] + 1:borders[1]], obj_name)
             logging.info("get_methods_borders() processed object = {} on lines {} - {}".
                          format(obj_name,
                                 self.symbol_to_line[borders[0]],
                                 self.symbol_to_line[borders[1]]))
             ff_list = list(self.flat_file)
-            ff_list[borders[0]:borders[1]] = "x"*len(obj)
+            ff_list[borders[0]:borders[1]] = "x"*(borders[1] - borders[0])
             self.flat_file = "".join(ff_list)
             for method in object_methods:
-                result[method] = [x + borders[0] for x in object_methods[method]]
-        if len(object_borders) > 1:
-            self.multiobject = True
+                method_borders = [x + borders[0] for x in object_methods[method]]
+                result[obj_name + "." + method] = [self.symbol_to_line[x] for x in method_borders]
         return result
