@@ -3,13 +3,13 @@ import re
 
 from bug_localization.utils import get_matching_bracket
 
-logging.basicConfig(filename='code_file.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(filename='app.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
 
 OBJECT_NAME_PATTERN = r"(?<=\b\sclass\s)\w+|(?<=\b\sinterface\s)\w+"
 METHOD_NAME_PATTERN = ".*\s(.*?)\("
 
 
-def replace_by_pattern(obj: str, pattern: str):
+def replace_by_pattern(obj: str, obj_name: str, pattern: str):
     """
     Can be used for detection and localization of expressions like -> {...}, ->{...}, = {...}, ={...}, {{...}},
     static {...}, static{...}
@@ -33,8 +33,7 @@ def replace_by_pattern(obj: str, pattern: str):
             clos_idxs.append(get_matching_bracket(obj, pattern_start_idx + dist_to_open_idx))
             obj_list[pattern_start_idx + dist_to_open_idx] = "["
             obj_list[clos_idxs[-1]] = "]"
-            logging.info(
-                "replace_by_pattern(obj = {}, pattern = {}): ".format(obj, pattern) + "".join(obj_list))
+            logging.info("replace_by_pattern(obj = {}, pattern = {}): ".format(obj_name, pattern))
             obj = "".join(obj_list)
             pattern_start_idx = obj.find(pattern)
             open_idxs.append(pattern_start_idx + dist_to_open_idx)
@@ -53,23 +52,23 @@ def process_object(obj: str, obj_name: str):
     """
     methods = {}
     # lambda expressions
-    obj, _, _ = replace_by_pattern(obj, "-> {")
-    obj, _, _ = replace_by_pattern(obj, "->{")
+    obj, _, _ = replace_by_pattern(obj, obj_name, "-> {")
+    obj, _, _ = replace_by_pattern(obj, obj_name, "->{")
     # initialization of Collections, where possible errors should be
     # caught on the build stage
-    obj, _, _ = replace_by_pattern(obj, "= {")
-    obj, _, _ = replace_by_pattern(obj, "={")
+    obj, _, _ = replace_by_pattern(obj, obj_name, "= {")
+    obj, _, _ = replace_by_pattern(obj, obj_name, "={")
     # every time someone uses double brace initialization, a kitten gets killed,
     # possible error also are to be caught while building
-    obj, _, _ = replace_by_pattern(obj, "{{")
-    obj, _, _ = replace_by_pattern(obj, "{ {")
+    obj, _, _ = replace_by_pattern(obj, obj_name, "{{")
+    obj, _, _ = replace_by_pattern(obj, obj_name, "{ {")
     # static initialization blocks
-    obj, static_open_idxs, static_clos_idxs = replace_by_pattern(obj, "static {")
+    obj, static_open_idxs, static_clos_idxs = replace_by_pattern(obj, obj_name, "static {")
     for static_open_idx, static_clos_idx in zip(static_open_idxs, static_clos_idxs):
         if static_open_idx == -1 and static_clos_idx == -1:
             continue
         methods[obj_name + ".<cinit>"] = [static_open_idx, static_clos_idx]
-    obj, static_open_idxs, static_clos_idxs = replace_by_pattern(obj, "static{")
+    obj, static_open_idxs, static_clos_idxs = replace_by_pattern(obj, obj_name, "static{")
     for static_open_idx, static_clos_idx in zip(static_open_idxs, static_clos_idxs):
         if static_open_idx == -1 and static_clos_idx == -1:
             continue
@@ -148,8 +147,13 @@ class CodeFile:
         object_borders = self.get_objects_borders()
         if len(object_borders) > 1:
             self.multiobject = True
+        hierarchy = object_borders.copy()
         for obj_name in reversed(object_borders):
             borders = object_borders[obj_name]
+            del hierarchy[obj_name]
+            for parent in reversed(hierarchy):
+                if hierarchy[parent][0] < borders[0] and hierarchy[parent][1] > borders[1]:
+                    obj_name = parent + "." + obj_name
             if self.multiobject:
                 obj, object_methods = process_object(self.flat_file[borders[0] + 1:borders[1] - 1], obj_name)
             else:
@@ -163,7 +167,7 @@ class CodeFile:
             self.flat_file = "".join(ff_list)
             for method in object_methods:
                 method_borders = [x + borders[0] for x in object_methods[method]]
-                if obj_name == method:
+                if obj_name.endswith(method):
                     method = "<init>"
-                result[obj_name + "." + method] = [self.symbol_to_line[x] for x in method_borders]
+                result[obj_name + "." + method] = [self.symbol_to_line[x] + 1 for x in method_borders]
         return result
