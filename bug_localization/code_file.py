@@ -6,7 +6,12 @@ from bug_localization.utils import get_matching_bracket
 logging.basicConfig(filename='app.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
 
 OBJECT_NAME_PATTERN = r"(?<=\b\sclass\s)\w+|(?<=\b\sinterface\s)\w+"
-METHOD_NAME_PATTERN = ".*\s(.*?)\("
+METHOD_NAME_PATTERN = r".*\s(.*?)\("
+COMMENT_PATTERNS = [r"/\*\*(.?)+", r"/\*(.?)+", r"//(.?)+", r"\*(.?)+"]
+
+
+def repl(m):
+    return '#' * len(m.group())
 
 
 def replace_by_pattern(obj: str, obj_name: str, pattern: str):
@@ -94,9 +99,11 @@ class CodeFile:
 
     def __init__(self, file, language='java'):
         self.file = file
+        for pattern in COMMENT_PATTERNS:
+            self.file = re.sub(pattern, repl, self.file)
         self.language = language
         self.multiobject = False
-        self.line_to_code = file.split("\n")
+        self.line_to_code = self.file.split("\n")
         self.flat_file = "".join(self.line_to_code)
         self.line_to_count = []
         self.symbol_to_line = {}
