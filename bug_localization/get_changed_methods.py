@@ -54,8 +54,8 @@ def get_methods(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
     return result
 
 
-def get_changed_methods(repo_path="../../intellij-community",
-                        commit_sha="a47e39be87fae50b80c2113858272af3ea9d62a5"):
+def get_changed_methods(repo_path="../../master",
+                        commit_sha="0df89408e2c547395e6d0def64512cdc5658b951"):
     repo = git.Repo(repo_path, odbt=git.db.GitDB)
     commit = repo.commit(commit_sha)
     diff_lines = get_changed_lines(repo, commit)
