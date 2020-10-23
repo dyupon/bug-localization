@@ -44,7 +44,7 @@ def get_methods(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
     for changed_file in commit.stats.files:
         file = repo.git.show('{}:{}'.format(commit.hexsha, changed_file))
         if changed_file.endswith(".kt"):
-            code_file = CodeFile(file, language="kotlin")
+            code_file = CodeFile(file, language="kt")
         elif changed_file.endswith(".java"):
             code_file = CodeFile(file)
         else:
@@ -55,7 +55,7 @@ def get_methods(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
 
 
 def get_changed_methods(repo_path="../../master",
-                        commit_sha="0df89408e2c547395e6d0def64512cdc5658b951"):
+                        commit_sha="58f120eac2b8b51079c47b40b8a3288d99a0f8b0"):
     repo = git.Repo(repo_path, odbt=git.db.GitDB)
     commit = repo.commit(commit_sha)
     diff_lines = get_changed_lines(repo, commit)
