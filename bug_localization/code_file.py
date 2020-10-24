@@ -5,8 +5,7 @@ from bug_localization.utils import get_matching_bracket
 
 logging.basicConfig(filename='app.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
 
-OBJECT_NAME_PATTERN = r"(?<=\b\sclass\s)\w+|(?<=\b\sinterface\s)\w+|(?<=\scompanion object\s)\w+|(?<=\scompanion " \
-                      r"object\s) "
+OBJECT_NAME_PATTERN = r"(?<=\bclass\s)\w+|(?<=\binterface\s)\w+|(?<=companion object\s)\w+|(?<=companion object\s)"
 METHOD_NAME_PATTERN = r".*\s(.*?)\("
 COMMENT_PATTERNS = [r"/\*\*(.?)+", r"/\*(.?)+", r"//(.?)+", r"\*(.?)+"]
 OBJECT_KEY_WORDS = [" class ", " interface ", " companion object "]
@@ -103,8 +102,12 @@ def process_object(obj: str, obj_name: str, language: str):
     while method_open_idx > -1:
         method_clos_idx = get_matching_bracket(obj, method_open_idx)
         curr_line = obj[0:method_open_idx]
-        method_name = re.findall(METHOD_NAME_PATTERN, curr_line)[0]
         obj = obj[method_clos_idx + 1:]
+        if curr_line.find(" enum ") > -1:
+            curr_pos += method_clos_idx + 1
+            method_open_idx = obj.find("{")
+            continue
+        method_name = re.findall(METHOD_NAME_PATTERN, curr_line)[0]
         methods[method_name] = [curr_pos + method_open_idx, curr_pos + method_clos_idx]
         curr_pos += method_clos_idx + 1
         method_open_idx = obj.find("{")
@@ -143,7 +146,9 @@ class CodeFile:
         :return: dict{key: name of the object, value: [opening bracket index, closing bracket index]}
         """
         object_borders = {}
-        for i, line in enumerate(self.line_to_code):
+        i = 0
+        while i < len(self.line_to_code):
+            line = self.line_to_code[i]
             self.line_to_count.append(len(line))
             object_open_line = -1
             for key_word in OBJECT_KEY_WORDS:
@@ -151,6 +156,7 @@ class CodeFile:
                 if object_open_line > -1:
                     break
             if object_open_line == -1:
+                i += 1
                 continue
             obj_name = re.findall(OBJECT_NAME_PATTERN, line)[0]
             if obj_name == "":
@@ -159,6 +165,7 @@ class CodeFile:
             while object_open_idx == -1:
                 i += 1
                 line = self.line_to_code[i]
+                self.line_to_count.append(len(line))
                 object_open_idx = line.find("{")
             object_open_idx += sum(self.line_to_count[0:i])
             object_clos_idx = get_matching_bracket(self.flat_file, object_open_idx)
@@ -167,6 +174,7 @@ class CodeFile:
                                 self.symbol_to_line[object_open_idx],
                                 self.symbol_to_line[object_clos_idx]))
             object_borders[obj_name] = [object_open_idx, object_clos_idx]
+            i += 1
         return object_borders
 
     def get_methods_borders(self):

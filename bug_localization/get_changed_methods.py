@@ -7,7 +7,7 @@ from bug_localization.code_file import CodeFile
 logging.basicConfig(filename='app.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
 
 DIFF_LINES_PATTERN = "\\n@@\s-\d+(?:,\d+)?\s\+(\d+)(?:,)?((?:\d+)?)"
-
+ISSUE_NUMBER_PATTERN = "(?<=(?:[^\w])EA-)[\d]+"
 
 def get_changed_lines(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
     diff_lines = {}
@@ -54,9 +54,8 @@ def get_methods(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
     return result
 
 
-def get_changed_methods(repo_path="../../master",
+def get_changed_methods(repo: git.repo.base.Repo,
                         commit_sha="58f120eac2b8b51079c47b40b8a3288d99a0f8b0"):
-    repo = git.Repo(repo_path, odbt=git.db.GitDB)
     commit = repo.commit(commit_sha)
     diff_lines = get_changed_lines(repo, commit)
     methods_lines = get_methods(repo, commit)
@@ -73,4 +72,21 @@ def get_changed_methods(repo_path="../../master",
 
 
 if __name__ == '__main__':
-    print(get_changed_methods())
+    repo_path = "../../master"
+    repo = git.Repo(repo_path, odbt=git.db.GitDB)
+    # print(get_changed_methods(repo))
+    commits = list(repo.iter_commits("master"))
+    issue_to_changed = {}
+    for commit in commits:
+        commit_msg = commit.message
+        issue = re.search(ISSUE_NUMBER_PATTERN, commit_msg)
+        if issue is not None:
+            try:
+                issue_to_changed[issue] = get_changed_methods(repo, commit.hexsha)
+            except git.exc.GitCommandError as ex:
+                logging.error("Failed to get changed methods: " + str(ex))
+    print(issue_to_changed)
+
+
+
+
