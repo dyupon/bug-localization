@@ -8,6 +8,7 @@ logging.basicConfig(filename='app.log', filemode='w', format='%(levelname)s: %(m
 OBJECT_NAME_PATTERN = r"(?<=\bclass\s)\w+|(?<=\binterface\s)\w+|(?<=companion object\s)\w+|(?<=companion object\s)"
 METHOD_NAME_PATTERN = r".*\s(.*?)\("
 COMMENT_PATTERNS = [r"/\*\*(.?)+", r"/\*(.?)+", r"//(.?)+", r"\*(.?)+"]
+INLINE_COMMENT_PATTERN = r"\/\*(.?)+\*\/"
 OBJECT_KEY_WORDS = [" class ", " interface ", " companion object "]
 
 
@@ -121,6 +122,7 @@ class CodeFile:
 
     def __init__(self, file, language='java'):
         self.file = file
+        self.file = re.sub(INLINE_COMMENT_PATTERN, "", self.file)
         for pattern in COMMENT_PATTERNS:
             self.file = re.sub(pattern, repl, self.file)
         self.language = language
@@ -158,7 +160,12 @@ class CodeFile:
             if object_open_line == -1:
                 i += 1
                 continue
-            obj_name = re.findall(OBJECT_NAME_PATTERN, line)[0]
+            obj_name = re.findall(OBJECT_NAME_PATTERN, line)
+            if len(obj_name) == 0:
+                logging.debug("Object border detection confusion: " + line)
+                i += 1
+                continue
+            obj_name = obj_name[0]
             if obj_name == "":
                 obj_name = "$Companion"
             object_open_idx = line.find("{")
@@ -197,7 +204,7 @@ class CodeFile:
                 if hierarchy[parent][0] < borders[0] and hierarchy[parent][1] > borders[1]:
                     obj_name = parent + "." + obj_name
             if self.multiobject:
-                obj, object_methods = process_object(self.flat_file[borders[0] + 1:borders[1] - 1],
+                obj, object_methods = process_object(self.flat_file[borders[0] + 1:borders[1]],
                                                      obj_name,
                                                      self.language)
             else:
