@@ -9,7 +9,8 @@ OBJECT_NAME_PATTERN = r"(?<=\bclass\s)\w+|(?<=\binterface\s)\w+|(?<=companion ob
 METHOD_NAME_PATTERN = r".*\s(.*?)\("
 COMMENT_PATTERNS = [r"/\*\*(.?)+", r"/\*(.?)+", r"//(.?)+", r"\*(.?)+"]
 INLINE_COMMENT_PATTERN = r"\/\*(.?)+\*\/"
-OBJECT_KEY_WORDS = [" class ", " interface ", " companion object "]
+OBJECT_KEY_WORDS_IND = [" class ", " interface ", " companion object "]
+OBJECT_KEY_WORDS = ["class ", "interface "]
 
 
 def repl(m):
@@ -103,12 +104,20 @@ def process_object(obj: str, obj_name: str, language: str):
     while method_open_idx > -1:
         method_clos_idx = get_matching_bracket(obj, method_open_idx)
         curr_line = obj[0:method_open_idx]
+        semicol_idx = curr_line.rfind(";")
+        if semicol_idx > -1:
+            curr_line = curr_line[semicol_idx:]
         obj = obj[method_clos_idx + 1:]
         if curr_line.find(" enum ") > -1:
             curr_pos += method_clos_idx + 1
             method_open_idx = obj.find("{")
             continue
-        method_name = re.findall(METHOD_NAME_PATTERN, curr_line)[0]
+        method_name = re.findall(METHOD_NAME_PATTERN, curr_line)
+        if len(method_name) == 0:
+            curr_pos += method_clos_idx + 1
+            method_open_idx = obj.find("{")
+            continue
+        method_name = method_name[0]
         methods[method_name] = [curr_pos + method_open_idx, curr_pos + method_clos_idx]
         curr_pos += method_clos_idx + 1
         method_open_idx = obj.find("{")
@@ -120,7 +129,8 @@ class CodeFile:
     Represents file with code for further manipulations with its objects and their methods
     """
 
-    def __init__(self, file, language='java'):
+    def __init__(self, file, file_name, language='java'):
+        self.file_name = file_name
         self.file = file
         self.file = re.sub(INLINE_COMMENT_PATTERN, "", self.file)
         for pattern in COMMENT_PATTERNS:
@@ -154,6 +164,12 @@ class CodeFile:
             self.line_to_count.append(len(line))
             object_open_line = -1
             for key_word in OBJECT_KEY_WORDS:
+                if line.startswith(key_word):
+                    object_open_line = 0
+                    break
+            for key_word in OBJECT_KEY_WORDS_IND:
+                if object_open_line > -1:
+                    break
                 object_open_line = line.find(key_word)
                 if object_open_line > -1:
                     break
@@ -169,6 +185,8 @@ class CodeFile:
             if obj_name == "":
                 obj_name = "$Companion"
             object_open_idx = line.find("{")
+            if self.flat_file[sum(self.line_to_count):].find("{") == -1:
+                break
             while object_open_idx == -1:
                 i += 1
                 line = self.line_to_code[i]
@@ -203,14 +221,9 @@ class CodeFile:
             for parent in reversed(hierarchy):
                 if hierarchy[parent][0] < borders[0] and hierarchy[parent][1] > borders[1]:
                     obj_name = parent + "." + obj_name
-            if self.multiobject:
-                obj, object_methods = process_object(self.flat_file[borders[0] + 1:borders[1]],
-                                                     obj_name,
-                                                     self.language)
-            else:
-                obj, object_methods = process_object(self.flat_file[borders[0] + 1:borders[1]],
-                                                     obj_name,
-                                                     self.language)
+            obj, object_methods = process_object(self.flat_file[borders[0] + 1:borders[1]],
+                                                obj_name,
+                                                self.language)
             logging.info("get_methods_borders() processed object = {} on lines {} - {}".
                          format(obj_name,
                                 self.symbol_to_line[borders[0]],
@@ -226,7 +239,7 @@ class CodeFile:
         if self.language == "kt":
             curr_pos = 0
             curr_file_part = self.flat_file[curr_pos:]
-            local_function_idx = curr_file_part.find("fun")
+            local_function_idx = curr_file_part.find("fun ")
             while local_function_idx > -1:
                 curr_line = self.line_to_code[self.symbol_to_line[curr_pos + local_function_idx]]
                 local_method_name = re.findall(METHOD_NAME_PATTERN, curr_line)[0]
@@ -236,11 +249,11 @@ class CodeFile:
                     curr_num_line = self.symbol_to_line[curr_pos + local_function_idx]
                     while self.line_to_code[curr_num_line] != "":
                         curr_num_line += 1
-                    result[local_method_name] = [self.symbol_to_line[curr_pos + local_function_idx] + 1,
-                                                 curr_num_line]
+                    result[self.file_name + "." + local_method_name] = \
+                        [self.symbol_to_line[curr_pos + local_function_idx] + 1, curr_num_line]
                 else:
-                    result[local_method_name] = [self.symbol_to_line[local_method_open_idx] + 1,
-                                                 self.symbol_to_line[local_method_clos_idx] + 1]
+                    result[self.file_name + "." + local_method_name] = [self.symbol_to_line[local_method_open_idx] + 1,
+                                                                        self.symbol_to_line[local_method_clos_idx] + 1]
                 curr_file_part = self.flat_file[local_method_clos_idx:]
                 curr_pos = local_method_clos_idx
                 local_function_idx = curr_file_part.find("fun")

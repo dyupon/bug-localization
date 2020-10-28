@@ -1,13 +1,17 @@
+import json
 import logging
 import re
+import csv
 
 import git
 from bug_localization.code_file import CodeFile
 
-logging.basicConfig(filename='app.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s %(levelname)s: %(message)s',
+                    level=logging.INFO)
 
 DIFF_LINES_PATTERN = "\\n@@\s-\d+(?:,\d+)?\s\+(\d+)(?:,)?((?:\d+)?)"
 ISSUE_NUMBER_PATTERN = "(?<=(?:[^\w])EA-)[\d]+"
+
 
 def get_changed_lines(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
     diff_lines = {}
@@ -43,50 +47,34 @@ def get_methods(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
     result = {}
     for changed_file in commit.stats.files:
         file = repo.git.show('{}:{}'.format(commit.hexsha, changed_file))
+        file_name = changed_file.split("/")[-1]
         if changed_file.endswith(".kt"):
-            code_file = CodeFile(file, language="kt")
+            code_file = CodeFile(file, file_name[:-3], language="kt")
         elif changed_file.endswith(".java"):
-            code_file = CodeFile(file)
+            code_file = CodeFile(file, file_name[:-5], file_name)
         else:
             continue
-        file_methods = code_file.get_methods_borders()
-        result[changed_file] = file_methods
+        try:
+            file_methods = code_file.get_methods_borders()
+            result[changed_file] = file_methods
+        except Exception as e:
+            logging.error("Failed to parse object " + changed_file + " for commit " + commit.hexsha + ": " + str(e))
     return result
 
 
 def get_changed_methods(repo: git.repo.base.Repo,
-                        commit_sha="58f120eac2b8b51079c47b40b8a3288d99a0f8b0"):
+                        commit_sha="de05b7f23a4c815c5868b181a9fed0c2a1b60b27"):
     commit = repo.commit(commit_sha)
     diff_lines = get_changed_lines(repo, commit)
     methods_lines = get_methods(repo, commit)
     result = []
     for changed_file in diff_lines:
-        methods = methods_lines[changed_file]
-        changed = diff_lines[changed_file]
-        for change in changed:
-            for method in methods:
-                borders = methods[method]
-                if max([change[0], borders[0]]) <= min([change[1], borders[1]]):
-                    result.append(".".join(changed_file.split("/")[:-1]) + "." + method)
+        if changed_file in methods_lines:
+            methods = methods_lines[changed_file]
+            changed = diff_lines[changed_file]
+            for change in changed:
+                for method in methods:
+                    borders = methods[method]
+                    if max([change[0], borders[0]]) <= min([change[1], borders[1]]):
+                        result.append(".".join(changed_file.split("/")[:-1]) + "." + method)
     return result
-
-
-if __name__ == '__main__':
-    repo_path = "../../master"
-    repo = git.Repo(repo_path, odbt=git.db.GitDB)
-    # print(get_changed_methods(repo))
-    commits = list(repo.iter_commits("master"))
-    issue_to_changed = {}
-    for commit in commits:
-        commit_msg = commit.message
-        issue = re.search(ISSUE_NUMBER_PATTERN, commit_msg)
-        if issue is not None:
-            try:
-                issue_to_changed[issue] = get_changed_methods(repo, commit.hexsha)
-            except git.exc.GitCommandError as ex:
-                logging.error("Failed to get changed methods: " + str(ex))
-    print(issue_to_changed)
-
-
-
-
