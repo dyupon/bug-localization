@@ -3,7 +3,8 @@ import re
 
 from bug_localization.utils import get_matching_bracket
 
-logging.basicConfig(filename='app.log', filemode='w', format='%(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(filename='get_changed_methods.log', filemode='w', format='%(levelname)s: %(message)s',
+                    level=logging.INFO)
 
 OBJECT_NAME_PATTERN = r"(?<=\bclass\s)\w+|(?<=\binterface\s)\w+|(?<=companion object\s)\w+|(?<=companion object\s)"
 METHOD_NAME_PATTERN = r".*\s(.*?)\("
@@ -44,7 +45,6 @@ def replace_by_pattern(obj: str, obj_name: str, pattern: str):
             clos_idxs.append(get_matching_bracket(obj, pattern_start_idx + dist_to_open_idx))
             obj_list[pattern_start_idx + dist_to_open_idx] = "["
             obj_list[clos_idxs[-1]] = "]"
-            logging.info("replace_by_pattern(obj = {}, pattern = {}): ".format(obj_name, pattern))
             obj = "".join(obj_list)
             pattern_start_idx = obj.find(pattern)
             open_idxs.append(pattern_start_idx + dist_to_open_idx)
@@ -222,8 +222,8 @@ class CodeFile:
                 if hierarchy[parent][0] < borders[0] and hierarchy[parent][1] > borders[1]:
                     obj_name = parent + "." + obj_name
             obj, object_methods = process_object(self.flat_file[borders[0] + 1:borders[1]],
-                                                obj_name,
-                                                self.language)
+                                                 obj_name,
+                                                 self.language)
             logging.info("get_methods_borders() processed object = {} on lines {} - {}".
                          format(obj_name,
                                 self.symbol_to_line[borders[0]],

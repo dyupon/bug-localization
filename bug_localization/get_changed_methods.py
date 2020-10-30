@@ -10,7 +10,7 @@ logging.basicConfig(filename='get_changed_methods.log', filemode='w', format='%(
                     level=logging.INFO)
 
 DIFF_LINES_PATTERN = "\\n@@\s-\d+(?:,\d+)?\s\+(\d+)(?:,)?((?:\d+)?)"
-ISSUE_NUMBER_PATTERN = "(?<=(?:[^\w])EA-)[\d]+"
+ISSUE_NUMBER_PATTERN = "(?<=(?:[^\w])EA-)[\d]+|(?<=^EA-)[\d]+"
 
 
 def get_changed_lines(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
@@ -43,8 +43,9 @@ def get_changed_lines(repo: git.repo.base.Repo, commit: git.objects.commit.Commi
         return diff_lines
 
 
-def get_methods(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
+def get_methods(repo: git.repo.base.Repo, commit: git.objects.commit.Commit, issue: str):
     result = {}
+    corrupted_issues = set()
     for changed_file in commit.stats.files:
         file = repo.git.show('{}:{}'.format(commit.hexsha, changed_file))
         file_name = changed_file.split("/")[-1]
@@ -58,15 +59,18 @@ def get_methods(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
             file_methods = code_file.get_methods_borders()
             result[changed_file] = file_methods
         except Exception as e:
+            corrupted_issues.add(issue)
             logging.error("Failed to parse object " + changed_file + " for commit " + commit.hexsha + ": " + str(e))
+    with open('corrupted_issues.txt', 'w') as f:
+        for item in corrupted_issues:
+            f.write(item)
     return result
 
 
-def get_changed_methods(repo: git.repo.base.Repo,
-                        commit_sha="de05b7f23a4c815c5868b181a9fed0c2a1b60b27"):
+def get_changed_methods(repo: git.repo.base.Repo, commit_sha: str, issue: str):
     commit = repo.commit(commit_sha)
     diff_lines = get_changed_lines(repo, commit)
-    methods_lines = get_methods(repo, commit)
+    methods_lines = get_methods(repo, commit, issue)
     result = []
     for changed_file in diff_lines:
         if changed_file in methods_lines:
@@ -95,17 +99,21 @@ if __name__ == '__main__':
     for commit in commits:
         commits_cnt += 1
         commit_msg = commit.message
-        issue = re.search(ISSUE_NUMBER_PATTERN, commit_msg)
-        if issue is not None and issue[0] in issues:
-            try:
-                print(commit.hexsha)
-                if issue[0] in issue_to_changed:
-                    issue_to_changed[issue[0]] = issue_to_changed[issue[0]] + get_changed_methods(repo, commit.hexsha)
-                else:
-                    issue_to_changed[issue[0]] = get_changed_methods(repo, commit.hexsha)
-                logging.info("Issue number: " + issue[0] + ", commit: " + commit.hexsha)
-            except git.exc.GitCommandError as ex:
-                logging.error("Failed to get changed methods: " + str(ex))
+        issue_match = re.findall(ISSUE_NUMBER_PATTERN, commit_msg)
+        if issue_match is not None:
+            for issue in issue_match:
+                if issue in issues:
+                    try:
+                        print(commit.hexsha)
+                        if issue in issue_to_changed:
+                            issue_to_changed[issue] = issue_to_changed[issue] + get_changed_methods(repo,
+                                                                                                    commit.hexsha,
+                                                                                                    issue)
+                        else:
+                            issue_to_changed[issue] = get_changed_methods(repo, commit.hexsha, issue)
+                        logging.info("Issue number: " + issue + ", commit: " + commit.hexsha)
+                    except git.exc.GitCommandError as ex:
+                        logging.error("Failed to get changed methods: " + str(ex))
         if commits_cnt % 1000 == 0:
             print("Amount of commits elapsed: " + str(commits_cnt))
     with open("issue_to_changed.json", "w") as mapping_file:
