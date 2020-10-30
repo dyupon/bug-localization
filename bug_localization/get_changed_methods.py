@@ -6,7 +6,7 @@ import csv
 import git
 from bug_localization.code_file import CodeFile
 
-logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s %(levelname)s: %(message)s',
+logging.basicConfig(filename='get_changed_methods.log', filemode='w', format='%(asctime)s %(levelname)s: %(message)s',
                     level=logging.INFO)
 
 DIFF_LINES_PATTERN = "\\n@@\s-\d+(?:,\d+)?\s\+(\d+)(?:,)?((?:\d+)?)"
@@ -78,3 +78,35 @@ def get_changed_methods(repo: git.repo.base.Repo,
                     if max([change[0], borders[0]]) <= min([change[1], borders[1]]):
                         result.append(".".join(changed_file.split("/")[:-1]) + "." + method)
     return result
+
+
+if __name__ == '__main__':
+    repo_path = "../../master"
+    repo = git.Repo(repo_path, odbt=git.db.GitDB)
+    # print(get_changed_methods(repo))
+    commits = list(repo.iter_commits("master"))
+    issue_to_changed = {}
+    issues = set()
+    with open('../issue_report_ids.csv') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            issues.add(row[0])
+    commits_cnt = 0
+    for commit in commits:
+        commits_cnt += 1
+        commit_msg = commit.message
+        issue = re.search(ISSUE_NUMBER_PATTERN, commit_msg)
+        if issue is not None and issue[0] in issues:
+            try:
+                print(commit.hexsha)
+                if issue[0] in issue_to_changed:
+                    issue_to_changed[issue[0]] = issue_to_changed[issue[0]] + get_changed_methods(repo, commit.hexsha)
+                else:
+                    issue_to_changed[issue[0]] = get_changed_methods(repo, commit.hexsha)
+                logging.info("Issue number: " + issue[0] + ", commit: " + commit.hexsha)
+            except git.exc.GitCommandError as ex:
+                logging.error("Failed to get changed methods: " + str(ex))
+        if commits_cnt % 1000 == 0:
+            print("Amount of commits elapsed: " + str(commits_cnt))
+    with open("issue_to_changed.json", "w") as mapping_file:
+        json.dump(issue_to_changed, mapping_file)
