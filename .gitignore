@@ -1,3 +1,4 @@
 /README.rst
 /.idea/
 /bug_localization/app.log
+/bug_localization/gather_data.log
