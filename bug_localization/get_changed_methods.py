@@ -14,6 +14,7 @@ DIFF_LINES_PATTERN = "\\n@@\s-\d+(?:,\d+)?\s\+(\d+)(?:,)?((?:\d+)?)"
 ISSUE_NUMBER_PATTERN = "(?<=(?:[^\w])EA-)[\d]+|(?<=^EA-)[\d]+"
 CORRUPTED_ISSUES = set()
 
+
 def get_changed_lines(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
     diff_lines = {}
     for parent_commit in commit.parents:

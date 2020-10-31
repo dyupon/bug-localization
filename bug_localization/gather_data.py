@@ -1,18 +1,21 @@
 import json
 import pandas as pd
 import logging
+import pickle
 from bug_localization.project_frame import ProjectFrame
 from bug_localization.source_frame import SourceFrame
 
 logging.basicConfig(filename='gather_data.log', filemode='w', format='%(asctime)s %(levelname)s: %(message)s',
                     level=logging.INFO)
 
-PATH_CACHE = {}
+REPO_PATH = "../../master"
 
 if __name__ == '__main__':
     issue_to_report = pd.read_csv("../issue_report_commit_ids.csv")
     issue_to_report.dropna(subset=["commit_hexsha"], inplace=True)
     issue_to_report.reset_index(drop=True, inplace=True)
+    with open('files.pickle', 'rb') as f:
+        file_system = pickle.load(f)
     meta_info = {}  # frame_id: "report_id", "exception", "commit_hash"
     df = pd.DataFrame(columns=["frame_id", "file_name", "frame", "line_number",
                                "distance_to_top", "language", "source", "days_since_file_changed",
@@ -45,12 +48,7 @@ if __name__ == '__main__':
                 file_name = frame.get_file_name()
                 if not (file_name.endswith(".java") or file_name.endswith(".kt")):
                     continue
-                if file_name in PATH_CACHE:
-                    frame.set_path(PATH_CACHE[file_name])
-                    logging.info("Found file = {} in path cache: {}".format(file_name, PATH_CACHE[file_name]))
-                else:
-                    frame.fill_path()
-                    PATH_CACHE[file_name] = frame.get_path()
+                frame.fill_path()
                 print(frame.get_path())
                 df_upd.append([
                     frame_id,  # frame_id

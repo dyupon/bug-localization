@@ -7,11 +7,7 @@ class Frame:
         self.file_name = frame["file_name"]
         self.line_number = frame["line_number"]
         self.path = path
-        self.repo_path = "../../master"
         self.change_authors = set()
-
-    def set_path(self, path: str):
-        self.path = path
 
     def fill_path(self):
         pass
@@ -32,4 +28,7 @@ class Frame:
         pass
 
     def get_num_people_changed(self):
+        pass
+
+    def get_method_length(self, commits_hexsha: list):
         pass

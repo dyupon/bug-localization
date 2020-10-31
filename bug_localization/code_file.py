@@ -113,7 +113,7 @@ def process_object(obj: str, obj_name: str, language: str):
             method_open_idx = obj.find("{")
             continue
         method_name = re.findall(METHOD_NAME_PATTERN, curr_line)
-        if len(method_name) == 0:
+        if method_name:
             curr_pos += method_clos_idx + 1
             method_open_idx = obj.find("{")
             continue
@@ -177,12 +177,12 @@ class CodeFile:
                 i += 1
                 continue
             obj_name = re.findall(OBJECT_NAME_PATTERN, line)
-            if len(obj_name) == 0:
+            if obj_name:
                 logging.debug("Object border detection confusion: " + line)
                 i += 1
                 continue
             obj_name = obj_name[0]
-            if obj_name == "":
+            if not obj_name:
                 obj_name = "$Companion"
             object_open_idx = line.find("{")
             if self.flat_file[sum(self.line_to_count):].find("{") == -1:
@@ -205,7 +205,7 @@ class CodeFile:
     def get_methods_borders(self):
         """
         Fetches methods from classes which are located in the file in reverse-order,
-        in each class already processed brackets are substituted with [ and ]
+        each processed class is substituted with meaningless sting
         Reverse-order guarantees that methods of inner classes won't be messed up with methods of outer ones
 
         :return: dict{key: method name, value: [start line, end line]
