@@ -2,3 +2,4 @@
 /.idea/
 /bug_localization/app.log
 /bug_localization/gather_data.log
+/bug_localization/get_changed_methods.log

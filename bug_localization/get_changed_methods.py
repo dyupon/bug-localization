@@ -1,5 +1,6 @@
 import json
 import logging
+import pickle
 import re
 import csv
 
@@ -11,7 +12,7 @@ logging.basicConfig(filename='get_changed_methods.log', filemode='w', format='%(
 
 DIFF_LINES_PATTERN = "\\n@@\s-\d+(?:,\d+)?\s\+(\d+)(?:,)?((?:\d+)?)"
 ISSUE_NUMBER_PATTERN = "(?<=(?:[^\w])EA-)[\d]+|(?<=^EA-)[\d]+"
-
+CORRUPTED_ISSUES = set()
 
 def get_changed_lines(repo: git.repo.base.Repo, commit: git.objects.commit.Commit):
     diff_lines = {}
@@ -45,7 +46,6 @@ def get_changed_lines(repo: git.repo.base.Repo, commit: git.objects.commit.Commi
 
 def get_methods(repo: git.repo.base.Repo, commit: git.objects.commit.Commit, issue: str):
     result = {}
-    corrupted_issues = set()
     for changed_file in commit.stats.files:
         file = repo.git.show('{}:{}'.format(commit.hexsha, changed_file))
         file_name = changed_file.split("/")[-1]
@@ -59,11 +59,8 @@ def get_methods(repo: git.repo.base.Repo, commit: git.objects.commit.Commit, iss
             file_methods = code_file.get_methods_borders()
             result[changed_file] = file_methods
         except Exception as e:
-            corrupted_issues.add(issue)
+            CORRUPTED_ISSUES.add(issue)
             logging.error("Failed to parse object " + changed_file + " for commit " + commit.hexsha + ": " + str(e))
-    with open('corrupted_issues.txt', 'w') as f:
-        for item in corrupted_issues:
-            f.write(item)
     return result
 
 
@@ -118,3 +115,5 @@ if __name__ == '__main__':
             print("Amount of commits elapsed: " + str(commits_cnt))
     with open("issue_to_changed.json", "w") as mapping_file:
         json.dump(issue_to_changed, mapping_file)
+    with open('corrupted_issues.pickle', 'wb') as f:
+        pickle.dump(CORRUPTED_ISSUES, f)
