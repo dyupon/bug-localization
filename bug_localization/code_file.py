@@ -3,8 +3,12 @@ import re
 
 from bug_localization.utils import get_matching_bracket
 
-logging.basicConfig(filename='get_changed_methods.log', filemode='w', format='%(levelname)s: %(message)s',
-                    level=logging.INFO)
+logging.basicConfig(
+    filename="get_changed_methods.log",
+    filemode="w",
+    format="%(levelname)s: %(message)s",
+    level=logging.INFO,
+)
 
 OBJECT_NAME_PATTERN = r"(?<=\bclass\s)\w+|(?<=\binterface\s)\w+|(?<=companion object\s)\w+|(?<=companion object\s)"
 METHOD_NAME_PATTERN = r".*\s(.*?)\("
@@ -15,7 +19,7 @@ OBJECT_KEY_WORDS = ["class ", "interface "]
 
 
 def repl(m):
-    return '#' * len(m.group())
+    return "#" * len(m.group())
 
 
 def replace_by_pattern(obj: str, obj_name: str, pattern: str):
@@ -42,7 +46,9 @@ def replace_by_pattern(obj: str, obj_name: str, pattern: str):
         return obj, open_idxs, clos_idxs
     else:
         while pattern_start_idx > -1:
-            clos_idxs.append(get_matching_bracket(obj, pattern_start_idx + dist_to_open_idx))
+            clos_idxs.append(
+                get_matching_bracket(obj, pattern_start_idx + dist_to_open_idx)
+            )
             obj_list[pattern_start_idx + dist_to_open_idx] = "["
             obj_list[clos_idxs[-1]] = "]"
             obj = "".join(obj_list)
@@ -77,23 +83,31 @@ def process_object(obj: str, obj_name: str, language: str):
     obj, _, _ = replace_by_pattern(obj, obj_name, "{ {")
     # static initialization blocks
     if language == "java":
-        obj, static_open_idxs, static_clos_idxs = replace_by_pattern(obj, obj_name, "static {")
+        obj, static_open_idxs, static_clos_idxs = replace_by_pattern(
+            obj, obj_name, "static {"
+        )
         for static_open_idx, static_clos_idx in zip(static_open_idxs, static_clos_idxs):
             if static_open_idx == -1 and static_clos_idx == -1:
                 continue
             methods[obj_name + ".<cinit>"] = [static_open_idx, static_clos_idx]
-        obj, static_open_idxs, static_clos_idxs = replace_by_pattern(obj, obj_name, "static{")
+        obj, static_open_idxs, static_clos_idxs = replace_by_pattern(
+            obj, obj_name, "static{"
+        )
         for static_open_idx, static_clos_idx in zip(static_open_idxs, static_clos_idxs):
             if static_open_idx == -1 and static_clos_idx == -1:
                 continue
             methods[obj_name + ".<cinit>"] = [static_open_idx, static_clos_idx]
     if language == "kt":
-        obj, static_open_idxs, static_clos_idxs = replace_by_pattern(obj, obj_name, "init {")
+        obj, static_open_idxs, static_clos_idxs = replace_by_pattern(
+            obj, obj_name, "init {"
+        )
         for static_open_idx, static_clos_idx in zip(static_open_idxs, static_clos_idxs):
             if static_open_idx == -1 and static_clos_idx == -1:
                 continue
             methods[obj_name + ".<init>"] = [static_open_idx, static_clos_idx]
-        obj, static_open_idxs, static_clos_idxs = replace_by_pattern(obj, obj_name, "init{")
+        obj, static_open_idxs, static_clos_idxs = replace_by_pattern(
+            obj, obj_name, "init{"
+        )
         for static_open_idx, static_clos_idx in zip(static_open_idxs, static_clos_idxs):
             if static_open_idx == -1 and static_clos_idx == -1:
                 continue
@@ -107,7 +121,7 @@ def process_object(obj: str, obj_name: str, language: str):
         semicol_idx = curr_line.rfind(";")
         if semicol_idx > -1:
             curr_line = curr_line[semicol_idx:]
-        obj = obj[method_clos_idx + 1:]
+        obj = obj[method_clos_idx + 1 :]
         if curr_line.find(" enum ") > -1:
             curr_pos += method_clos_idx + 1
             method_open_idx = obj.find("{")
@@ -129,7 +143,7 @@ class CodeFile:
     Represents file with code for further manipulations with its objects and their methods
     """
 
-    def __init__(self, file, file_name, language='java'):
+    def __init__(self, file, file_name, language="java"):
         self.file_name = file_name
         self.file = file
         self.file = re.sub(INLINE_COMMENT_PATTERN, "", self.file)
@@ -144,7 +158,7 @@ class CodeFile:
         num_of_lines = 0
         num_of_symbols = 0
         for s in range(len(file)):
-            if file[s] == '\n':
+            if file[s] == "\n":
                 num_of_lines += 1
             else:
                 self.symbol_to_line[num_of_symbols] = num_of_lines
@@ -185,7 +199,7 @@ class CodeFile:
             if not obj_name:
                 obj_name = "$Companion"
             object_open_idx = line.find("{")
-            if self.flat_file[sum(self.line_to_count):].find("{") == -1:
+            if self.flat_file[sum(self.line_to_count) :].find("{") == -1:
                 break
             while object_open_idx == -1:
                 i += 1
@@ -194,10 +208,13 @@ class CodeFile:
                 object_open_idx = line.find("{")
             object_open_idx += sum(self.line_to_count[0:i])
             object_clos_idx = get_matching_bracket(self.flat_file, object_open_idx)
-            logging.info("get_objects_borders() found object = {} on lines {} - {}".
-                         format(obj_name,
-                                self.symbol_to_line[object_open_idx],
-                                self.symbol_to_line[object_clos_idx]))
+            logging.info(
+                "get_objects_borders() found object = {} on lines {} - {}".format(
+                    obj_name,
+                    self.symbol_to_line[object_open_idx],
+                    self.symbol_to_line[object_clos_idx],
+                )
+            )
             object_borders[obj_name] = [object_open_idx, object_clos_idx]
             i += 1
         return object_borders
@@ -219,41 +236,61 @@ class CodeFile:
             borders = object_borders[obj_name]
             del hierarchy[obj_name]
             for parent in reversed(hierarchy):
-                if hierarchy[parent][0] < borders[0] and hierarchy[parent][1] > borders[1]:
+                if (
+                    hierarchy[parent][0] < borders[0]
+                    and hierarchy[parent][1] > borders[1]
+                ):
                     obj_name = parent + "." + obj_name
-            obj, object_methods = process_object(self.flat_file[borders[0] + 1:borders[1]],
-                                                 obj_name,
-                                                 self.language)
-            logging.info("get_methods_borders() processed object = {} on lines {} - {}".
-                         format(obj_name,
-                                self.symbol_to_line[borders[0]],
-                                self.symbol_to_line[borders[1]]))
+            obj, object_methods = process_object(
+                self.flat_file[borders[0] + 1 : borders[1]], obj_name, self.language
+            )
+            logging.info(
+                "get_methods_borders() processed object = {} on lines {} - {}".format(
+                    obj_name,
+                    self.symbol_to_line[borders[0]],
+                    self.symbol_to_line[borders[1]],
+                )
+            )
             ff_list = list(self.flat_file)
-            ff_list[borders[0]:borders[1]] = "x" * (borders[1] - borders[0])
+            ff_list[borders[0] : borders[1]] = "x" * (borders[1] - borders[0])
             self.flat_file = "".join(ff_list)
             for method in object_methods:
                 method_borders = [x + borders[0] for x in object_methods[method]]
                 if obj_name.endswith(method):
                     method = "<init>"
-                result[obj_name + "." + method] = [self.symbol_to_line[x] + 1 for x in method_borders]
+                result[obj_name + "." + method] = [
+                    self.symbol_to_line[x] + 1 for x in method_borders
+                ]
         if self.language == "kt":
             curr_pos = 0
             curr_file_part = self.flat_file[curr_pos:]
             local_function_idx = curr_file_part.find("fun ")
             while local_function_idx > -1:
-                curr_line = self.line_to_code[self.symbol_to_line[curr_pos + local_function_idx]]
+                curr_line = self.line_to_code[
+                    self.symbol_to_line[curr_pos + local_function_idx]
+                ]
                 local_method_name = re.findall(METHOD_NAME_PATTERN, curr_line)[0]
-                local_method_open_idx = curr_pos + local_function_idx + curr_file_part[local_function_idx:].find("{")
-                local_method_clos_idx = get_matching_bracket(self.flat_file, local_method_open_idx)
+                local_method_open_idx = (
+                    curr_pos
+                    + local_function_idx
+                    + curr_file_part[local_function_idx:].find("{")
+                )
+                local_method_clos_idx = get_matching_bracket(
+                    self.flat_file, local_method_open_idx
+                )
                 if local_method_clos_idx == -1:
                     curr_num_line = self.symbol_to_line[curr_pos + local_function_idx]
                     while self.line_to_code[curr_num_line] != "":
                         curr_num_line += 1
-                    result[self.file_name + "." + local_method_name] = \
-                        [self.symbol_to_line[curr_pos + local_function_idx] + 1, curr_num_line]
+                    result[self.file_name + "." + local_method_name] = [
+                        self.symbol_to_line[curr_pos + local_function_idx] + 1,
+                        curr_num_line,
+                    ]
                 else:
-                    result[self.file_name + "." + local_method_name] = [self.symbol_to_line[local_method_open_idx] + 1,
-                                                                        self.symbol_to_line[local_method_clos_idx] + 1]
+                    result[self.file_name + "." + local_method_name] = [
+                        self.symbol_to_line[local_method_open_idx] + 1,
+                        self.symbol_to_line[local_method_clos_idx] + 1,
+                    ]
                 curr_file_part = self.flat_file[local_method_clos_idx:]
                 curr_pos = local_method_clos_idx
                 local_function_idx = curr_file_part.find("fun")
