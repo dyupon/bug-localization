@@ -9,12 +9,12 @@ if __name__ == "__main__":
     repo = git.Repo("../../master", odbt=git.db.GitDB)
     commits = list(repo.iter_commits("master"))
     mapping = pd.read_csv(
-        "../issue_report_ids.csv", dtype={"issue_id": str, "report_id": str}
+        "issue_report_ids.csv", dtype={"issue_id": str, "report_id": str}
     )
     mapping["commit_hexsha"] = ""
     issues = set(
         pd.read_csv(
-            "../issue_report_ids.csv", dtype={"issue_id": str, "report_id": str}
+            "issue_report_ids.csv", dtype={"issue_id": str, "report_id": str}
         )["issue_id"]
     )
     commits_cnt = 0

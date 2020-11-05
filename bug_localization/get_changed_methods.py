@@ -112,7 +112,7 @@ if __name__ == "__main__":
     commits = list(repo.iter_commits("master"))
     issue_to_changed = {}
     issues = set()
-    with open("../issue_report_ids.csv") as file:
+    with open("issue_report_ids.csv") as file:
         reader = csv.reader(file)
         for row in reader:
             issues.add(row[0])

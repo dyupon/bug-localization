@@ -3,3 +3,11 @@
 /bug_localization/app.log
 /bug_localization/gather_data.log
 /bug_localization/get_changed_methods.log
+/bug_localization/corrupted_issues.pickle
+/bug_localization/files.pickle
+/bug_localization/issue_report_commit_ids.csv
+/bug_localization/issue_to_changed.json
+/bug_localization/issue_to_changed_formatted.json
+/bug_localization/issue_report_ids.csv
+/bug_localization/issue_ids.csv
+/models/data.csv
