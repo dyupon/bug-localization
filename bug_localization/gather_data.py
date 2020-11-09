@@ -46,6 +46,7 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(
         columns=[
+            ("timestamp", int),
             ("report_id", int),
             ("issue_id", int),
             ("file_name", str),
@@ -95,6 +96,7 @@ if __name__ == "__main__":
                 file_name = frame.get_file_name()
                 df_upd.append(
                     [
+                        report["timestamp"],  # timestamp
                         frame.get_report_id(),  # report_id
                         issue_id,  # issue_id
                         frame.get_file_name(),  # file_name
