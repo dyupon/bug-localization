@@ -32,6 +32,30 @@ def get_root_cause_check(changed_methods, frame):
     return 0
 
 
+def load_file_tree():
+    with open("files.pickle", "rb") as fs:
+        file_system = pickle.load(fs)
+    for key in file_system:
+        file_system[key] = file_system[key].replace("\\", ".")
+    return file_system
+
+
+def get_frame(path, ft, report, report_id, frame_position):
+    sub_directory = ".".join(path.split(".")[:3])
+    frame = None
+    for key in ft:
+        if ft[key].find(sub_directory):
+            frame = ProjectFrame(
+                report_id, frame_position, report["frames"][frame_position]
+            )
+            break
+    if not frame:
+        frame = SourceFrame(
+            report_id, frame_position, report["frames"][frame_position]
+        )
+    return frame
+
+
 if __name__ == "__main__":
 
     issue_to_report = pd.read_csv("issue_report_commit_ids.csv")
@@ -46,18 +70,18 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(
         columns=[
-            ("timestamp", int),
-            ("report_id", int),
-            ("issue_id", int),
-            ("file_name", str),
-            ("frame", str),
-            ("line_number", int),
-            ("distance_to_top", int),
-            ("language", int),
-            ("source", int),
-            ("frame_length", int),
-            ("exception_type", int),
-            ("is_rootcause", int)
+            "timestamp",
+            "report_id",
+            "issue_id",
+            "file_name",
+            "frame",
+            "line_number",
+            "distance_to_top",
+            "language",
+            "source",
+            "frame_length",
+            "exception_type",
+            "is_rootcause"
         ]
     )
     cnt = 0
@@ -72,6 +96,8 @@ if __name__ == "__main__":
             except UnicodeDecodeError as ex:
                 logging.error("Bad source report {} encoding: ".format(report["id"]))
                 continue
+            # remove non unique lines from frame
+            report["frames"] = [dict(t) for t in {tuple(d.items()) for d in report["frames"]}]
             commits_hexsha = issue_to_report.loc[
                 issue_to_report["report_id"] == report["id"], "commit_hexsha"
             ]
@@ -83,16 +109,10 @@ if __name__ == "__main__":
                     )
                 )
             df_upd = []
+            ft = load_file_tree()
             for frame_position in range(0, len(report["frames"])):
                 method_name = report["frames"][frame_position]["method_name"]
-                if method_name.startswith("com."):
-                    frame = ProjectFrame(
-                        report_id, frame_position, report["frames"][frame_position]
-                    )
-                elif method_name.startswith("java."):
-                    frame = SourceFrame(
-                        report_id, frame_position, report["frames"][frame_position]
-                    )
+                frame = get_frame(method_name, ft, report, report_id, frame_position)
                 file_name = frame.get_file_name()
                 df_upd.append(
                     [
@@ -110,7 +130,8 @@ if __name__ == "__main__":
                         get_root_cause_check(issue_to_changed[str(issue_id)], frame.get_frame())  # is_rootcause
                     ]
                 )
-            df = df.append(pd.DataFrame(df_upd, columns=df.columns))
+            if df_upd:
+                df = df.append(pd.DataFrame(df_upd, columns=df.columns))
         logging.info("Report {} processed".format(report_id))
         if cnt % 1000 == 0:
             print("Amount of elapsed reports: {}".format(cnt))

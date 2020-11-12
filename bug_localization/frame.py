@@ -27,7 +27,9 @@ class Frame:
         return self.frame_position
 
     def get_language(self):
-        if self.frame.startswith("java.") or self.frame.startswith("sun."):
+        if self.frame.startswith("java.") or \
+                self.frame.startswith("sun.") or \
+                self.frame.startswith("javax."):
             return 0
         if self.file_name is None:
             return None

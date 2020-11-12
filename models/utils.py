@@ -25,8 +25,7 @@ def train_test_split(X, y, axis, test_size):
     unique_idxs = list(df.index.unique())
     idxs_num = len(unique_idxs)
     threshold = unique_idxs[math.ceil(idxs_num * (1 - test_size))]
-    threshold = list(df.index).index(threshold)
-    test = df[df.index < threshold]
-    train = df[df.index >= threshold]
+    train = df[df.index <= threshold]
+    test = df[df.index > threshold]
     return train.drop(["is_rootcause"], axis=1), test.drop(["is_rootcause"], axis=1), train[["is_rootcause"]], test[
         ["is_rootcause"]]
