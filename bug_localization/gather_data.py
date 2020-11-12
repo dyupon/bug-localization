@@ -80,24 +80,25 @@ if __name__ == "__main__":
             "language",
             "source",
             "frame_length",
+            "days_since_file_changed",
+            "num_people_changed"
             "exception_type",
             "is_rootcause"
         ]
     )
     cnt = 0
+    ft = load_file_tree()
     for report_id in issue_to_report["report_id"]:
         issue_id = issue_to_report.loc[issue_to_report["report_id"] == report_id, "issue_id"].values[0]
+        cnt += 1
         if str(issue_id) in corrupted_issues or str(issue_id) not in issue_to_changed.keys():
             continue
-        cnt += 1
         with open("../reports/" + str(report_id) + ".json", "r") as f:
             try:
                 report = json.load(f)
             except UnicodeDecodeError as ex:
                 logging.error("Bad source report {} encoding: ".format(report["id"]))
                 continue
-            # remove non unique lines from frame
-            report["frames"] = [dict(t) for t in {tuple(d.items()) for d in report["frames"]}]
             commits_hexsha = issue_to_report.loc[
                 issue_to_report["report_id"] == report["id"], "commit_hexsha"
             ]
@@ -109,10 +110,10 @@ if __name__ == "__main__":
                     )
                 )
             df_upd = []
-            ft = load_file_tree()
             for frame_position in range(0, len(report["frames"])):
                 method_name = report["frames"][frame_position]["method_name"]
                 frame = get_frame(method_name, ft, report, report_id, frame_position)
+                frame.fill_path()
                 file_name = frame.get_file_name()
                 df_upd.append(
                     [
@@ -126,6 +127,8 @@ if __name__ == "__main__":
                         frame.get_language(),  # language
                         frame.get_file_source(),  # source
                         frame.get_frame_length(),  # frame_length
+                        frame.get_num_days_since_file_changed(commits_hexsha),  # days_since_file_changed
+                        frame.get_num_people_changed(),  # num_people_changed
                         get_report_exception_type(report),  # exception_type
                         get_root_cause_check(issue_to_changed[str(issue_id)], frame.get_frame())  # is_rootcause
                     ]

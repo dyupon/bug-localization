@@ -49,7 +49,7 @@ class Frame:
     def get_report_id(self):
         return self.report_id
 
-    def days_since_file_changed(self, commits_hexsha: list):
+    def get_num_days_since_file_changed(self, commits_hexsha: list):
         pass
 
     def get_num_people_changed(self):

@@ -39,9 +39,8 @@ class ProjectFrame(Frame):
         )
         self.path = result[0][result[0].find("\\") + 1:].replace("\\", "/")
 
-    def days_since_file_changed(self, commits_hexsha: list):
+    def get_num_days_since_file_changed(self, commits_hexsha: list):
         repo = git.Repo(REPO_PATH, odbt=git.db.GitDB)
-        g = git.Git(REPO_PATH)
         min_datetime = datetime.datetime(
             3018, 10, 30, tzinfo=dateutil.tz.tzoffset("UTC", +10800)
         )
@@ -51,20 +50,22 @@ class ProjectFrame(Frame):
             if commit.authored_datetime < min_datetime:
                 min_datetime = commit.authored_datetime
                 fix = repo.commit(commit_hexsha)
-        path = self.path
-        affecting_commits = g.log(
-            "--format=format:%H", "-m", "--full-history", "--follow", path
-        ).splitlines()
         date_diff = -1
-        for affecting_hexsha in affecting_commits:
-            commit = repo.commit(affecting_hexsha)
-            if fix.authored_datetime > commit.authored_datetime:
+        affecting_commits = set()
+        for blame_entry in repo.blame("HEAD", self.path, "-w -M -C"):
+            affecting_commit = repo.commit(blame_entry[0])
+            affecting_commits.add(affecting_commit)
+        affecting_commits = list(affecting_commits)
+        affecting_commits.sort(key=lambda x: x.authored_datetime, reverse=False)
+        for commit in affecting_commits:
+            if fix.authored_datetime < commit.authored_datetime:
                 date_diff = (fix.authored_datetime - commit.authored_datetime).days
                 break
             else:
-                self.change_authors.add(commit.author)
+                email = commit.author.email.lower()
+                self.change_authors.add(email.split("@")[0])
         return date_diff
 
     def get_num_people_changed(self):
-        assert self.change_authors, "days_since_file_changed() should be called first"
+        # assert self.change_authors, "get_num_days_since_file_changed() should be called first"
         return len(self.change_authors)
