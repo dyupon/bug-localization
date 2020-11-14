@@ -40,11 +40,11 @@ def load_file_tree():
     return file_system
 
 
-def get_frame(path, ft, report, report_id, frame_position):
-    sub_directory = ".".join(path.split(".")[:3])
+def get_frame(method_name, ft, report, report_id, frame_position):
+    sub_directory = ".".join(method_name.split(".")[:3])
     frame = None
     for key in ft:
-        if ft[key].find(sub_directory):
+        if ft[key].find(sub_directory) > -1:
             frame = ProjectFrame(
                 report_id, frame_position, report["frames"][frame_position]
             )
@@ -81,7 +81,7 @@ if __name__ == "__main__":
             "source",
             "frame_length",
             "days_since_file_changed",
-            "num_people_changed"
+            "num_people_changed",
             "exception_type",
             "is_rootcause"
         ]

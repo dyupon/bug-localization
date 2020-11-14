@@ -5,6 +5,7 @@ import datetime
 import dateutil.tz
 import pickle
 
+from bug_localization.commit import Commit
 from bug_localization.frame import Frame
 
 logging.basicConfig(
@@ -24,20 +25,43 @@ class ProjectFrame(Frame):
     with open("files.pickle", "rb") as f:
         file_system = pickle.load(f)
 
+    if os.path.exists('blame_cache.pickle'):
+        with open("blame_cache.pickle", "rb") as f:
+            BLAME_CACHE = pickle.load(f)
+    else:
+        BLAME_CACHE = {}
+
     def __init__(self, report_id: str, frame_position: int, frame: dict, path=""):
         super().__init__(report_id, frame_position, frame, path)
+        if self.file_name == "<generated>":
+            self.file_name = self.frame.split("$")[0].split(".")[-1]
+            if self.file_name + ".java" in self.file_system:
+                self.file_name += ".java"
+            elif self.file_name + ".kt" in self.file_system:
+                self.file_name += ".kt"
 
     def fill_path(self):
-        result = []
+        result_list = []
         if self.file_name in self.file_system:
-            result.append(
+            result_list.append(
                 os.path.join(self.file_system[self.file_name], self.file_name)
             )
-        assert len(result) == 1, (
-            "We have two different files with the same name and somehow need to handle it: "
-            "report_id = {}, file_name = {}".format(self.report_id, self.file_name)
-        )
-        self.path = result[0][result[0].find("\\") + 1:].replace("\\", "/")
+        intersect_min = float('inf')
+        result = ""
+        if len(result_list) > 1:
+            for res in result_list:
+                intersect = set(res.split("//")).intersection(set(self.frame.split(".")))
+                if len(intersect) < intersect_min:
+                    intersect_min = len(intersect)
+                    result = res
+            self.path = result[result.find("\\") + 1:].replace("\\", "/")
+        elif not result_list:
+            print(self.file_name)
+            print(self.frame)
+            print(self.report_id)
+            self.path = ""
+        else:
+            self.path = result_list[0][result_list[0].find("\\") + 1:].replace("\\", "/")
 
     def get_num_days_since_file_changed(self, commits_hexsha: list):
         repo = git.Repo(REPO_PATH, odbt=git.db.GitDB)
@@ -52,20 +76,30 @@ class ProjectFrame(Frame):
                 fix = repo.commit(commit_hexsha)
         date_diff = -1
         affecting_commits = set()
-        for blame_entry in repo.blame("HEAD", self.path, "-w -M -C"):
-            affecting_commit = repo.commit(blame_entry[0])
-            affecting_commits.add(affecting_commit)
-        affecting_commits = list(affecting_commits)
-        affecting_commits.sort(key=lambda x: x.authored_datetime, reverse=False)
+        if self.frame in self.BLAME_CACHE:
+            affecting_commits = self.BLAME_CACHE[self.frame]
+        else:
+            try:
+                for blame_entry in repo.blame("HEAD", self.path, "-w -M -C"):
+                    affecting_commit = Commit(repo.commit(blame_entry[0]))
+                    affecting_commits.add(affecting_commit)
+                affecting_commits = list(affecting_commits)
+                affecting_commits.sort(key=lambda x: x.authored_datetime, reverse=False)
+                self.BLAME_CACHE[self.frame] = affecting_commits
+            except git.exc.GitCommandError:
+                return date_diff
+            finally:
+                with open("blame_cache.pickle", "wb") as bc:
+                    proxy = dict(self.BLAME_CACHE)
+                    pickle.dump(proxy, bc)
         for commit in affecting_commits:
             if fix.authored_datetime < commit.authored_datetime:
                 date_diff = (fix.authored_datetime - commit.authored_datetime).days
                 break
             else:
-                email = commit.author.email.lower()
+                email = commit.author_email.lower()
                 self.change_authors.add(email.split("@")[0])
         return date_diff
 
     def get_num_people_changed(self):
-        # assert self.change_authors, "get_num_days_since_file_changed() should be called first"
         return len(self.change_authors)
