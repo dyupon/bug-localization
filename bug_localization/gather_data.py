@@ -2,6 +2,10 @@ import json
 import pandas as pd
 import logging
 import pickle
+
+from joblib import Parallel, delayed
+from tqdm import tqdm
+
 from bug_localization.project_frame import ProjectFrame
 from bug_localization.source_frame import SourceFrame
 
@@ -41,7 +45,7 @@ def load_file_tree():
 
 
 def get_frame(method_name, ft, report, report_id, frame_position):
-    sub_directory = ".".join(method_name.split(".")[:3])
+    sub_directory = ".".join(method_name.split(".")[:5])
     frame = None
     for key in ft:
         if ft[key].find(sub_directory) > -1:
@@ -54,6 +58,52 @@ def get_frame(method_name, ft, report, report_id, frame_position):
             report_id, frame_position, report["frames"][frame_position]
         )
     return frame
+
+
+def process_report(report_id):
+    issue_id = issue_to_report.loc[issue_to_report["report_id"] == report_id, "issue_id"].values[0]
+    if str(issue_id) in corrupted_issues or str(issue_id) not in issue_to_changed.keys():
+        return None
+    with open("../reports/" + str(report_id) + ".json", "r") as f:
+        try:
+            report = json.load(f)
+        except UnicodeDecodeError as ex:
+            logging.error("Bad source report {} encoding: ".format(report["id"]))
+            return None
+        commits_hexsha = issue_to_report.loc[
+            issue_to_report["report_id"] == report["id"], "commit_hexsha"
+        ]
+        commits_hexsha = commits_hexsha.values[0].replace("'", "")[1:-1].split(", ")
+        if len(report["class"]) > 1:
+            logging.error(
+                "Several exceptions for the error report, report_id = {}".format(
+                    report_id
+                )
+            )
+        df_upd = []
+        for frame_position in range(0, len(report["frames"])):
+            method_name = report["frames"][frame_position]["method_name"]
+            frame = get_frame(method_name, ft, report, report_id, frame_position)
+            frame.fill_path()
+            df_upd.append(
+                [
+                    report["timestamp"],  # timestamp
+                    frame.get_report_id(),  # report_id
+                    issue_id,  # issue_id
+                    frame.get_file_name(),  # file_name
+                    frame.get_frame(),  # frame
+                    frame.get_line_number(),  # line_number
+                    frame.get_position(),  # distance_to_top
+                    frame.get_language(),  # language
+                    frame.get_file_source(),  # source
+                    frame.get_frame_length(),  # frame_length
+                    frame.get_num_days_since_file_changed(commits_hexsha),  # days_since_file_changed
+                    frame.get_num_people_changed(),  # num_people_changed
+                    get_report_exception_type(report),  # exception_type
+                    get_root_cause_check(issue_to_changed[str(issue_id)], frame.get_frame())  # is_rootcause
+                ]
+            )
+        return df_upd
 
 
 if __name__ == "__main__":
@@ -86,56 +136,14 @@ if __name__ == "__main__":
             "is_rootcause"
         ]
     )
-    cnt = 0
     ft = load_file_tree()
-    for report_id in issue_to_report["report_id"]:
-        issue_id = issue_to_report.loc[issue_to_report["report_id"] == report_id, "issue_id"].values[0]
-        cnt += 1
-        if str(issue_id) in corrupted_issues or str(issue_id) not in issue_to_changed.keys():
-            continue
-        with open("../reports/" + str(report_id) + ".json", "r") as f:
-            try:
-                report = json.load(f)
-            except UnicodeDecodeError as ex:
-                logging.error("Bad source report {} encoding: ".format(report["id"]))
-                continue
-            commits_hexsha = issue_to_report.loc[
-                issue_to_report["report_id"] == report["id"], "commit_hexsha"
-            ]
-            commits_hexsha = commits_hexsha.values[0].replace("'", "")[1:-1].split(", ")
-            if len(report["class"]) > 1:
-                logging.error(
-                    "Several exceptions for the error report, report_id = {}".format(
-                        report_id
-                    )
-                )
-            df_upd = []
-            for frame_position in range(0, len(report["frames"])):
-                method_name = report["frames"][frame_position]["method_name"]
-                frame = get_frame(method_name, ft, report, report_id, frame_position)
-                frame.fill_path()
-                file_name = frame.get_file_name()
-                df_upd.append(
-                    [
-                        report["timestamp"],  # timestamp
-                        frame.get_report_id(),  # report_id
-                        issue_id,  # issue_id
-                        frame.get_file_name(),  # file_name
-                        frame.get_frame(),  # frame
-                        frame.get_line_number(),  # line_number
-                        frame.get_position(),  # distance_to_top
-                        frame.get_language(),  # language
-                        frame.get_file_source(),  # source
-                        frame.get_frame_length(),  # frame_length
-                        frame.get_num_days_since_file_changed(commits_hexsha),  # days_since_file_changed
-                        frame.get_num_people_changed(),  # num_people_changed
-                        get_report_exception_type(report),  # exception_type
-                        get_root_cause_check(issue_to_changed[str(issue_id)], frame.get_frame())  # is_rootcause
-                    ]
-                )
-            if df_upd:
-                df = df.append(pd.DataFrame(df_upd, columns=df.columns))
-        logging.info("Report {} processed".format(report_id))
-        if cnt % 1000 == 0:
-            print("Amount of elapsed reports: {}".format(cnt))
+
+    res = Parallel(n_jobs=8)(
+        delayed(process_report)(r)
+        for r in tqdm(issue_to_report["report_id"], desc="Progress")
+    )
+    for d in res:
+        if d:
+            df = df.append(pd.DataFrame(d, columns=df.columns))
+
     df.to_csv("data.csv", index=False)

@@ -39,6 +39,8 @@ class ProjectFrame(Frame):
                 self.file_name += ".java"
             elif self.file_name + ".kt" in self.file_system:
                 self.file_name += ".kt"
+            elif self.file_name + ".scala" in self.file_system:
+                self.file_name += ".scala"
 
     def fill_path(self):
         result_list = []
@@ -56,9 +58,12 @@ class ProjectFrame(Frame):
                     result = res
             self.path = result[result.find("\\") + 1:].replace("\\", "/")
         elif not result_list:
-            print(self.file_name)
-            print(self.frame)
-            print(self.report_id)
+            with open("corrupted_frames.txt", "a") as cf:
+                cf.write(self.file_name)
+                cf.write("\n")
+                cf.write(self.frame)
+                cf.write("\n")
+                cf.write(self.report_id)
             self.path = ""
         else:
             self.path = result_list[0][result_list[0].find("\\") + 1:].replace("\\", "/")
