@@ -25,11 +25,8 @@ class ProjectFrame(Frame):
     with open("files.pickle", "rb") as f:
         file_system = pickle.load(f)
 
-    if os.path.exists('blame_cache.pickle'):
-        with open("blame_cache.pickle", "rb") as f:
-            BLAME_CACHE = pickle.load(f)
-    else:
-        BLAME_CACHE = {}
+    with open("blame_cache.pickle", "rb") as f:
+        BLAME_CACHE = pickle.load(f)
 
     def __init__(self, report_id: str, frame_position: int, frame: dict, path=""):
         super().__init__(report_id, frame_position, frame, path)
@@ -59,11 +56,12 @@ class ProjectFrame(Frame):
             self.path = result[result.find("\\") + 1:].replace("\\", "/")
         elif not result_list:
             with open("corrupted_frames.txt", "a") as cf:
-                cf.write(self.file_name)
+                cf.write(str(self.file_name))
                 cf.write("\n")
-                cf.write(self.frame)
+                cf.write(str(self.frame))
                 cf.write("\n")
-                cf.write(self.report_id)
+                cf.write(str(self.report_id))
+                cf.write("\n")
             self.path = ""
         else:
             self.path = result_list[0][result_list[0].find("\\") + 1:].replace("\\", "/")
@@ -80,26 +78,13 @@ class ProjectFrame(Frame):
                 min_datetime = commit.authored_datetime
                 fix = repo.commit(commit_hexsha)
         date_diff = -1
-        affecting_commits = set()
         if self.frame in self.BLAME_CACHE:
             affecting_commits = self.BLAME_CACHE[self.frame]
         else:
-            try:
-                for blame_entry in repo.blame("HEAD", self.path, "-w -M -C"):
-                    affecting_commit = Commit(repo.commit(blame_entry[0]))
-                    affecting_commits.add(affecting_commit)
-                affecting_commits = list(affecting_commits)
-                affecting_commits.sort(key=lambda x: x.authored_datetime, reverse=False)
-                self.BLAME_CACHE[self.frame] = affecting_commits
-            except git.exc.GitCommandError:
-                return date_diff
-            finally:
-                with open("blame_cache.pickle", "wb") as bc:
-                    proxy = dict(self.BLAME_CACHE)
-                    pickle.dump(proxy, bc)
-        for commit in affecting_commits:
+            return date_diff
+        for i, commit in enumerate(affecting_commits):
             if fix.authored_datetime < commit.authored_datetime:
-                date_diff = (fix.authored_datetime - commit.authored_datetime).days
+                date_diff = (fix.authored_datetime - affecting_commits[i-1].authored_datetime).days
                 break
             else:
                 email = commit.author_email.lower()
