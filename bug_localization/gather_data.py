@@ -68,7 +68,7 @@ def process_report(report_id):
         try:
             report = json.load(f)
         except UnicodeDecodeError as ex:
-            logging.error("Bad source report {} encoding: ".format(report["id"]))
+            logging.error("Bad source report {} encoding: ".format(report_id))
             return None
         commits_hexsha = issue_to_report.loc[
             issue_to_report["report_id"] == report["id"], "commit_hexsha"
