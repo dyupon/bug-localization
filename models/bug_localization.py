@@ -16,7 +16,7 @@ from sklearn.model_selection import GridSearchCV
 DIR_OUTPUT = "output/"
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--experiment_name", type=str)
+    parser.add_argument("--experiment_name", type=str, default="all reports")
     parser.add_argument("--skip_reports_without_errors", type=str, default="no")
     config = parser.parse_args()
     DIR_OUTPUT += config.experiment_name
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     baseline.fit(X_train, y_train, colname="distance_to_top")
     baseline_predict = baseline.predict(X_test)
     with open(DIR_OUTPUT + "/results.txt", "a") as baseline:
-        baseline.write("\n \n ------------- BASELINE ------------- \n")
+        baseline.write("------------- BASELINE ------------- \n")
         baseline.write("F1 score for Top1Classifier: {} \n".format(metrics.f1_score(y_test, baseline_predict)))
         baseline.write("Accuracy for reports: {} \n".format(report_accuracy(y_test, baseline_predict)))
         baseline.write(np.array2string(metrics.confusion_matrix(y_test, baseline_predict)))
@@ -99,9 +99,9 @@ if __name__ == '__main__':
         lf.write("Best score: {} using {} \n".format(logreg_cv.best_score_, logreg_cv.best_params_))
         lf.write("Mean of scores in CV: {} \n".format(logreg_cv.cv_results_['mean_test_score']))
         lf.write("Std of scores in CV: {} \n".format(logreg_cv.cv_results_['std_test_score']))
-        lf.write("F1 score for LR Classifier: {} \n".format(metrics.f1_score(y_test, lr_predict)))
-        lf.write("Accuracy for reports: {} \n".format(report_accuracy(y_test, lr_predict)))
-        lf.write("Accuracy for most likely rootcauses: {} \n".format(most_likely_error_accuracy(y_test, lr_proba)))
+        lf.write("F1 score for LR Classifier: {:.3f} \n".format(metrics.f1_score(y_test, lr_predict)))
+        lf.write("Accuracy for reports: {:.3f} \n".format(report_accuracy(y_test, lr_predict)))
+        lf.write("Accuracy for most likely rootcauses: {:.3f} \n".format(most_likely_error_accuracy(y_test, lr_proba)))
         lf.write(np.array2string(metrics.confusion_matrix(y_test, lr_predict)))
 
     """
@@ -118,10 +118,10 @@ if __name__ == '__main__':
     pred_train = np.argmax(clf.oob_decision_function_, axis=1)
     with open(DIR_OUTPUT + "/results.txt", "a") as rff:
         rff.write("\n \n ------------- RF OOB ------------- \n")
-        rff.write("OOB score: {} \n".format("metrics.f1_score(y_train, pred_train)"))
-        rff.write("F1 score for OOB RF Classifier: {} \n".format(metrics.f1_score(y_test, rf_predict)))
-        rff.write("Accuracy for reports: {} \n".format(report_accuracy(y_test, rf_predict)))
-        rff.write("Accuracy for most likely rootcauses: {} \n".format(most_likely_error_accuracy(y_test, rf_proba)))
+        rff.write("OOB score: {} \n".format(metrics.f1_score(y_train, pred_train)))
+        rff.write("F1 score for OOB RF Classifier: {:.3f} \n".format(metrics.f1_score(y_test, rf_predict)))
+        rff.write("Accuracy for reports: {:.3f} \n".format(report_accuracy(y_test, rf_predict)))
+        rff.write("Accuracy for most likely rootcauses: {:.3f} \n".format(most_likely_error_accuracy(y_test, rf_proba)))
         rff.write(np.array2string(metrics.confusion_matrix(y_test, rf_predict)))
         rff.write("\n Feature importance \n")
         rff.write(feature_importance.to_string())
@@ -153,9 +153,9 @@ if __name__ == '__main__':
         rff.write("Best score: {} using {} \n".format(cv_rf.best_score_, cv_rf.best_params_))
         rff.write("Mean of scores in CV: {} \n".format(cv_rf.cv_results_['mean_test_score']))
         rff.write("Std of scores in CV: {} \n".format("cv_rf.cv_results_['std_test_score']"))
-        rff.write("F1 score for RF Classifier: {} \n".format(metrics.f1_score(y_test, rf_predict)))
-        rff.write("Accuracy for reports: {} \n".format(report_accuracy(y_test, rf_predict)))
-        rff.write("Accuracy for most likely rootcauses: {} \n".format(most_likely_error_accuracy(y_test, rf_proba)))
+        rff.write("F1 score for RF Classifier: {:.3f} \n".format(metrics.f1_score(y_test, rf_predict)))
+        rff.write("Accuracy for reports: {:.3f} \n".format(report_accuracy(y_test, rf_predict)))
+        rff.write("Accuracy for most likely rootcauses: {:.3f} \n".format(most_likely_error_accuracy(y_test, rf_proba)))
         rff.write(np.array2string(metrics.confusion_matrix(y_test, rf_predict)))
         rff.write("\n Feature importance \n")
         rff.write(feature_importance.to_string())
