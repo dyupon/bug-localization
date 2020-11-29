@@ -1,0 +1,51 @@
+------------- BASELINE ------------- 
+F1 score for Top1Classifier: 0.012971971276349316 
+Accuracy for reports: 0.29143284698840255 
+[[212301   1721]
+ [ 23845    168]]
+ 
+ ------------- LR GridSearchCV ------------- 
+Best score: 0.17115193009705623 using {'C': 0.1} 
+Mean of scores in CV: [0.         0.         0.13320898 0.1376814  0.17115193] 
+Std of scores in CV: [0.         0.         0.26550853 0.25135528 0.24580941] 
+F1 score for LR Classifier: 0.15004 
+Accuracy for reports: 0.54545 
+Accuracy for most likely rootcauses: 0.03367 
+[[203389  10633]
+ [ 21203   2810]]
+ 
+ ------------- RF OOB ------------- 
+OOB score: 0.9612504925784842 
+F1 score for OOB RF Classifier: 0.00763 
+Accuracy for reports: 0.60531 
+Accuracy for most likely rootcauses: 0.08717 
+[[213213    809]
+ [ 23918     95]]
+ Feature importance 
+                         importance
+line_number                0.324553
+frame_length               0.302351
+distance_to_top            0.152473
+days_since_file_changed    0.072461
+language                   0.064569
+num_people_changed         0.059137
+source                     0.024457
+ 
+ ------------- RF GridSearchCV ------------- 
+Best score: 0.4458334993473653 using {'criterion': 'entropy', 'max_depth': 4, 'max_features': 'auto', 'min_samples_split': 2, 'n_estimators': 2} 
+Mean of scores in CV: [0.         0.07443492 0.         ... 0.32528393 0.29713509 0.29601986] 
+Std of scores in CV: cv_rf.cv_results_['std_test_score'] 
+F1 score for RF Classifier: 0.14140 
+Accuracy for reports: 0.64796 
+Accuracy for most likely rootcauses: 0.05387 
+[[194855  19167]
+ [ 20728   3285]]
+ Feature importance 
+                         importance
+frame_length               0.340269
+distance_to_top            0.317291
+num_people_changed         0.252316
+source                     0.069688
+days_since_file_changed    0.013622
+line_number                0.006794
+language                   0.000020

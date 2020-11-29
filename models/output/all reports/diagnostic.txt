@@ -1,0 +1,6 @@
+Train: 0    655704
+1     81183
+Name: is_rootcause, dtype: int64
+Test: 0    214022
+1     24013
+Name: is_rootcause, dtype: int64
