@@ -66,10 +66,13 @@ if __name__ == '__main__':
     baseline = TopKClassifier()
     baseline.fit(X_train, y_train, colname="distance_to_top")
     baseline_predict = baseline.predict(X_test)
+    baseline_proba = baseline.predict_proba(X_test)
     with open(DIR_OUTPUT + "/results.txt", "a") as baseline:
         baseline.write("------------- BASELINE ------------- \n")
         baseline.write("F1 score for Top1Classifier: {} \n".format(metrics.f1_score(y_test, baseline_predict)))
         baseline.write("Accuracy for reports: {} \n".format(report_accuracy(y_test, baseline_predict)))
+        baseline.write(
+            "Accuracy for most likely rootcauses: {:.5f} \n".format(most_likely_error_accuracy(y_test, baseline_proba)))
         baseline.write(np.array2string(metrics.confusion_matrix(y_test, baseline_predict)))
 
     """

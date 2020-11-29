@@ -1,5 +1,5 @@
 from sklearn.base import BaseEstimator
-import pandas as pd
+import numpy as np
 
 
 class TopKClassifier(BaseEstimator):
@@ -14,9 +14,33 @@ class TopKClassifier(BaseEstimator):
         self.colname = colname
         return self
 
-    def predict(self, X, y=None):
+    def predict(self, X):
         try:
             getattr(self, "colname")
         except AttributeError:
             raise RuntimeError("You must fit classifier before predicting")
         return [int(x == (self.k - 1)) for x in X[self.colname]]
+
+    def predict_proba(self, X):
+        try:
+            getattr(self, "colname")
+        except AttributeError:
+            raise RuntimeError("You must fit classifier before predicting")
+        return np.array(
+            [[0, 1] if x == (self.k - 1) else [1, 0] for x in X[self.colname]]
+        )
+
+
+class ConstantClassifier(BaseEstimator):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y):
+        assert len(X) == len(y), "X and y must be the same length"
+        return self
+
+    def predict(self, X):
+        pass
+
+    def predict_proba(self, X):
+        pass
