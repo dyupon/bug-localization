@@ -12,6 +12,22 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
+from itertools import zip_longest
+
+
+def grouper(iterable, n, fillvalue=None):
+    """
+    Collect data into fixed-length chunks or blocks
+    """
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
+
+
+with open("corrupted_frames.txt", "r") as cf:
+    corrupted_frames = set()
+    for c in (list(group) for group in grouper(map(str.strip, cf), 3)):
+        corrupted_frames.add(c)
+
 
 DIR_OUTPUT = "output/"
 if __name__ == '__main__':
@@ -29,6 +45,10 @@ if __name__ == '__main__':
     df.drop("exception_type", axis=1, inplace=True)
     df.dropna(inplace=True)
     df = df.drop(df[(df.days_since_file_changed > -100500) & (df.days_since_file_changed <= -1)].index)
+    for index, row in df.iterrows():
+        if [row["file_name"], row["frame"], row["report_id"]] in corrupted_frames:
+            df.drop(index, inplace=True)
+
     df = df.replace({'days_since_file_changed': -100500}, -1)
 
     if config.skip_reports_without_errors == "yes":
@@ -95,13 +115,13 @@ if __name__ == '__main__':
     lr_predict = lr.predict(X_test_std)
     lr_proba = lr.predict_proba(X_test_std)
     with open(DIR_OUTPUT + "/results.txt", "a") as lf:
-        lf.write("\n \n ------------- LR GridSearchCV ------------- \n")
+        lf.write("\n \n------------- LR GridSearchCV ------------- \n")
         lf.write("Best score: {} using {} \n".format(logreg_cv.best_score_, logreg_cv.best_params_))
         lf.write("Mean of scores in CV: {} \n".format(logreg_cv.cv_results_['mean_test_score']))
         lf.write("Std of scores in CV: {} \n".format(logreg_cv.cv_results_['std_test_score']))
-        lf.write("F1 score for LR Classifier: {:.3f} \n".format(metrics.f1_score(y_test, lr_predict)))
-        lf.write("Accuracy for reports: {:.3f} \n".format(report_accuracy(y_test, lr_predict)))
-        lf.write("Accuracy for most likely rootcauses: {:.3f} \n".format(most_likely_error_accuracy(y_test, lr_proba)))
+        lf.write("F1 score for LR Classifier: {:.5f} \n".format(metrics.f1_score(y_test, lr_predict)))
+        lf.write("Accuracy for reports: {:.5f} \n".format(report_accuracy(y_test, lr_predict)))
+        lf.write("Accuracy for most likely rootcauses: {:.5f} \n".format(most_likely_error_accuracy(y_test, lr_proba)))
         lf.write(np.array2string(metrics.confusion_matrix(y_test, lr_predict)))
 
     """
@@ -117,11 +137,11 @@ if __name__ == '__main__':
                                       columns=['importance']).sort_values('importance', ascending=False)
     pred_train = np.argmax(clf.oob_decision_function_, axis=1)
     with open(DIR_OUTPUT + "/results.txt", "a") as rff:
-        rff.write("\n \n ------------- RF OOB ------------- \n")
+        rff.write("\n \n------------- RF OOB ------------- \n")
         rff.write("OOB score: {} \n".format(metrics.f1_score(y_train, pred_train)))
-        rff.write("F1 score for OOB RF Classifier: {:.3f} \n".format(metrics.f1_score(y_test, rf_predict)))
-        rff.write("Accuracy for reports: {:.3f} \n".format(report_accuracy(y_test, rf_predict)))
-        rff.write("Accuracy for most likely rootcauses: {:.3f} \n".format(most_likely_error_accuracy(y_test, rf_proba)))
+        rff.write("F1 score for OOB RF Classifier: {:.5f} \n".format(metrics.f1_score(y_test, rf_predict)))
+        rff.write("Accuracy for reports: {:.5f} \n".format(report_accuracy(y_test, rf_predict)))
+        rff.write("Accuracy for most likely rootcauses: {:.5f} \n".format(most_likely_error_accuracy(y_test, rf_proba)))
         rff.write(np.array2string(metrics.confusion_matrix(y_test, rf_predict)))
         rff.write("\n Feature importance \n")
         rff.write(feature_importance.to_string())
@@ -149,13 +169,13 @@ if __name__ == '__main__':
                                       columns=['importance']).sort_values('importance', ascending=False)
 
     with open(DIR_OUTPUT + "/results.txt", "a") as rff:
-        rff.write("\n \n ------------- RF GridSearchCV ------------- \n")
+        rff.write("\n \n------------- RF GridSearchCV ------------- \n")
         rff.write("Best score: {} using {} \n".format(cv_rf.best_score_, cv_rf.best_params_))
         rff.write("Mean of scores in CV: {} \n".format(cv_rf.cv_results_['mean_test_score']))
         rff.write("Std of scores in CV: {} \n".format("cv_rf.cv_results_['std_test_score']"))
-        rff.write("F1 score for RF Classifier: {:.3f} \n".format(metrics.f1_score(y_test, rf_predict)))
-        rff.write("Accuracy for reports: {:.3f} \n".format(report_accuracy(y_test, rf_predict)))
-        rff.write("Accuracy for most likely rootcauses: {:.3f} \n".format(most_likely_error_accuracy(y_test, rf_proba)))
+        rff.write("F1 score for RF Classifier: {:.5f} \n".format(metrics.f1_score(y_test, rf_predict)))
+        rff.write("Accuracy for reports: {:.5f} \n".format(report_accuracy(y_test, rf_predict)))
+        rff.write("Accuracy for most likely rootcauses: {:.5f} \n".format(most_likely_error_accuracy(y_test, rf_proba)))
         rff.write(np.array2string(metrics.confusion_matrix(y_test, rf_predict)))
         rff.write("\n Feature importance \n")
         rff.write(feature_importance.to_string())
