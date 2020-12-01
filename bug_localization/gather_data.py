@@ -44,11 +44,11 @@ def load_file_tree():
     return file_system
 
 
-def get_frame(method_name, ft, report, report_id, frame_position):
+def get_frame(method_name, file_name, ft, report, report_id, frame_position):
     sub_directory = ".".join(method_name.split(".")[:5])
     frame = None
     for key in ft:
-        if ft[key].find(sub_directory) > -1:
+        if ft[key].find(sub_directory) > -1 and (ft.get(file_name, False) or file_name == "<generated>"):
             frame = ProjectFrame(
                 report_id, frame_position, report["frames"][frame_position]
             )
@@ -74,17 +74,12 @@ def process_report(report_id):
             issue_to_report["report_id"] == report["id"], "commit_hexsha"
         ]
         commits_hexsha = commits_hexsha.values[0].replace("'", "")[1:-1].split(", ")
-        if len(report["class"]) > 1:
-            logging.error(
-                "Several exceptions for the error report, report_id = {}".format(
-                    report_id
-                )
-            )
         df_upd = []
         for frame_position in range(0, len(report["frames"])):
             method_name = report["frames"][frame_position]["method_name"]
-            frame = get_frame(method_name, ft, report, report_id, frame_position)
-            frame.fill_path()
+            frame = get_frame(method_name, report["frames"][frame_position]["file_name"], ft,
+                              report, report_id, frame_position)
+            frame.format_fs()
             df_upd.append(
                 [
                     report["timestamp"],  # timestamp
@@ -100,6 +95,7 @@ def process_report(report_id):
                     frame.get_num_days_since_file_changed(commits_hexsha),  # days_since_file_changed
                     frame.get_num_people_changed(),  # num_people_changed
                     get_report_exception_type(report),  # exception_type
+                    frame.get_file_length(),
                     get_root_cause_check(issue_to_changed[str(issue_id)], frame.get_frame())  # is_rootcause
                 ]
             )
@@ -107,7 +103,6 @@ def process_report(report_id):
 
 
 if __name__ == "__main__":
-
     issue_to_report = pd.read_csv("issue_report_commit_ids.csv")
     issue_to_report.dropna(subset=["commit_hexsha"], inplace=True)
     issue_to_report.reset_index(drop=True, inplace=True)
@@ -133,17 +128,15 @@ if __name__ == "__main__":
             "days_since_file_changed",
             "num_people_changed",
             "exception_type",
+            "file_length"
             "is_rootcause"
         ]
     )
     ft = load_file_tree()
-
     res = Parallel(n_jobs=8)(
         delayed(process_report)(r)
         for r in tqdm(issue_to_report["report_id"], desc="Progress")
     )
-    for d in res:
-        if d:
-            df = df.append(pd.DataFrame(d, columns=df.columns))
-
+    res = [x for x in res if x]
+    df = pd.DataFrame(res, columns=df.columns)
     df.to_csv("data.csv", index=False)

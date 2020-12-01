@@ -70,6 +70,21 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "beautifulsoup4"
+version = "4.9.3"
+description = "Screen-scraping library"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+soupsieve = {version = ">1.2", markers = "python_version >= \"3.0\""}
+
+[package.extras]
+html5lib = ["html5lib"]
+lxml = ["lxml"]
+
+[[package]]
 name = "black"
 version = "20.8b1"
 description = "The uncompromising code formatter."
@@ -146,6 +161,27 @@ description = "Cross-platform colored terminal text."
 category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+
+[[package]]
+name = "commoncode"
+version = "20.10.20"
+description = "commoncode"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+attrs = ">=18.1,<20.1.0 || >20.1.0"
+Beautifulsoup4 = ">=4.0.0,<5.0.0"
+click = ">=6.0.0"
+intbitset = ">=2.3.0,<3.0"
+requests = ">=2.7.0,<3.0.0"
+saneyaml = "*"
+text-unidecode = ">=1.0"
+typing = ">=3.6,<3.7"
+
+[package.extras]
+testing = ["pytest (>=4)", "pytest-xdist (>=1)"]
 
 [[package]]
 name = "confuse"
@@ -247,6 +283,17 @@ numpy = "*"
 pillow = "*"
 PyWavelets = "*"
 scipy = "*"
+six = "*"
+
+[[package]]
+name = "intbitset"
+version = "2.4.1"
+description = "C-based extension implementing fast integer bit sets."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
 six = "*"
 
 [[package]]
@@ -1034,6 +1081,17 @@ security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
 socks = ["PySocks (>=1.5.6,!=1.5.7)", "win-inet-pton"]
 
 [[package]]
+name = "saneyaml"
+version = "0.4"
+description = "Dump readable YAML and load safely any YAML preserving ordering and avoiding surprises of type conversions. This library is a PyYaml wrapper with sane behaviour to read and write readable YAML safely, typically when used for configuration."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+PyYAML = "*"
+
+[[package]]
 name = "scikit-learn"
 version = "0.23.2"
 description = "A set of python modules for machine learning and data mining"
@@ -1111,6 +1169,14 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
+name = "soupsieve"
+version = "2.0.1"
+description = "A modern CSS selector implementation for Beautiful Soup."
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[[package]]
 name = "tangled-up-in-unicode"
 version = "0.0.6"
 description = "Access to the Unicode Character Database (UCD)"
@@ -1141,6 +1207,14 @@ python-versions = "*"
 
 [package.extras]
 test = ["pathlib2"]
+
+[[package]]
+name = "text-unidecode"
+version = "1.3"
+description = "The most basic Text::Unidecode port"
+category = "main"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "threadpoolctl"
@@ -1195,6 +1269,14 @@ test = ["pytest"]
 name = "typed-ast"
 version = "1.4.1"
 description = "a fork of Python 2 and 3 ast modules with type comment support"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "typing"
+version = "3.6.6"
+description = "Type Hints for Python"
 category = "main"
 optional = false
 python-versions = "*"
@@ -1275,7 +1357,7 @@ notebook = ">=4.4.1"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "b82b9b0a36317709a5a6e2b711689da60ec8bc3053c5b9b409eca6b6830a7427"
+content-hash = "3143fcd4a8048389246abc711eec6deb27b92ad5477bdec11f55e24c49f43eaa"
 
 [metadata.files]
 appdirs = [
@@ -1321,6 +1403,11 @@ attrs = [
 backcall = [
     {file = "backcall-0.2.0-py2.py3-none-any.whl", hash = "sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255"},
     {file = "backcall-0.2.0.tar.gz", hash = "sha256:5cbdbf27be5e7cfadb448baf0aa95508f91f2bbc6c6437cd9cd06e2a4c215e1e"},
+]
+beautifulsoup4 = [
+    {file = "beautifulsoup4-4.9.3-py2-none-any.whl", hash = "sha256:4c98143716ef1cb40bf7f39a8e3eec8f8b009509e74904ba3a7b315431577e35"},
+    {file = "beautifulsoup4-4.9.3-py3-none-any.whl", hash = "sha256:fff47e031e34ec82bf17e00da8f592fe7de69aeea38be00523c04623c04fb666"},
+    {file = "beautifulsoup4-4.9.3.tar.gz", hash = "sha256:84729e322ad1d5b4d25f805bfa05b902dd96450f43842c4e99067d5e1369eb25"},
 ]
 black = [
     {file = "black-20.8b1.tar.gz", hash = "sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea"},
@@ -1383,6 +1470,10 @@ colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
+commoncode = [
+    {file = "commoncode-20.10.20-py2.py3-none-any.whl", hash = "sha256:8190cf67a0f06579c00e5212d53499587da32f247629dc7a1fef7f329351321f"},
+    {file = "commoncode-20.10.20.tar.gz", hash = "sha256:57337f37f350e417fd9e55d3bb56a94d29ea5475df42172061232d1490d299a6"},
+]
 confuse = [
     {file = "confuse-1.3.0-py2.py3-none-any.whl", hash = "sha256:0600af9544e6e82a01e6a4225fb33c566edbd0df919b576e3bc9643e501275f9"},
     {file = "confuse-1.3.0.tar.gz", hash = "sha256:f68a1c61fdb175b88e7a1466277c5b62bd039b722c1bbb72d42df24253d32b1f"},
@@ -1420,6 +1511,19 @@ idna = [
 ]
 imagehash = [
     {file = "ImageHash-4.1.0.tar.gz", hash = "sha256:978e25d3df66ae8fa4fb24542e46cea6d0724f02c0c760b2de4931a54d5c7482"},
+]
+intbitset = [
+    {file = "intbitset-2.4.1-cp27-cp27m-win32.whl", hash = "sha256:d0cfcdbf4ad14d9e32a11a10574e8b09ae6501d852ee514ebd50e016fe608051"},
+    {file = "intbitset-2.4.1-cp27-cp27m-win_amd64.whl", hash = "sha256:31b86c74f1b6c83c0b6de10d3e4c05a7307dd39ada11047d3b216cbedba4d0c4"},
+    {file = "intbitset-2.4.1-cp36-cp36m-macosx_10_9_x86_64.macosx_10_10_x86_64.whl", hash = "sha256:d2fe4a94863655e44b3b16e96020c765a73d75eba641f0657b10783b5006fe7a"},
+    {file = "intbitset-2.4.1-cp36-cp36m-win32.whl", hash = "sha256:23397ee757478f5328cb5ab342b2d829f716425c6d0a12e6d845b23788104e49"},
+    {file = "intbitset-2.4.1-cp36-cp36m-win_amd64.whl", hash = "sha256:86e2472c333ea24eb0d1640815fa5c48620a17e221efd76bf332d891b27bf3ac"},
+    {file = "intbitset-2.4.1-cp37-cp37m-macosx_10_9_x86_64.macosx_10_10_x86_64.whl", hash = "sha256:bc3ae9678eed3674efe547c76d6dccbaac8d2a9bc4c989efe793b538a0c26b52"},
+    {file = "intbitset-2.4.1-cp37-cp37m-win32.whl", hash = "sha256:f8cabafeea7ce1f13d034976fafd356a2a38f46ed26ee2cbb6b50639883975f2"},
+    {file = "intbitset-2.4.1-cp37-cp37m-win_amd64.whl", hash = "sha256:6ffb7b4832cdf21f57e3619536970726770bf9ba775a4a4b25d9618c220f0ddd"},
+    {file = "intbitset-2.4.1-cp38-cp38-win32.whl", hash = "sha256:6f91ee074c3ce836b35c84852f3b180a96d08f6558ba16f5563982cf3fff9c4a"},
+    {file = "intbitset-2.4.1-cp38-cp38-win_amd64.whl", hash = "sha256:91b157166978ee0b342f63cf1b4de29759260a9ab7f9bb5d37d5250af07d770d"},
+    {file = "intbitset-2.4.1.tar.gz", hash = "sha256:44bca80b8cc702d5a56f0686f2bb5e028ab4d0c2c1761941589d46b7fa2c701c"},
 ]
 ipykernel = [
     {file = "ipykernel-5.3.4-py3-none-any.whl", hash = "sha256:d6fbba26dba3cebd411382bc484f7bc2caa98427ae0ddb4ab37fe8bfeb5c7dd3"},
@@ -1948,6 +2052,10 @@ requests = [
     {file = "requests-2.24.0-py2.py3-none-any.whl", hash = "sha256:fe75cc94a9443b9246fc7049224f75604b113c36acb93f87b80ed42c44cbb898"},
     {file = "requests-2.24.0.tar.gz", hash = "sha256:b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b"},
 ]
+saneyaml = [
+    {file = "saneyaml-0.4-py2.py3-none-any.whl", hash = "sha256:f0d5bdd51649f3253ca8c2d9e48c78540c39d9d035810a2cd4406dbeffd8da11"},
+    {file = "saneyaml-0.4.tar.gz", hash = "sha256:9a1863a9d27586fd86c30b9736478a7d441bf1d118cdc71a2fec0d94cfc3cf5c"},
+]
 scikit-learn = [
     {file = "scikit-learn-0.23.2.tar.gz", hash = "sha256:20766f515e6cd6f954554387dfae705d93c7b544ec0e6c6a5d8e006f6f7ef480"},
     {file = "scikit_learn-0.23.2-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:98508723f44c61896a4e15894b2016762a55555fbf09365a0bb1870ecbd442de"},
@@ -2012,6 +2120,10 @@ smmap = [
     {file = "smmap-3.0.4-py2.py3-none-any.whl", hash = "sha256:54c44c197c819d5ef1991799a7e30b662d1e520f2ac75c9efbeb54a742214cf4"},
     {file = "smmap-3.0.4.tar.gz", hash = "sha256:9c98bbd1f9786d22f14b3d4126894d56befb835ec90cef151af566c7e19b5d24"},
 ]
+soupsieve = [
+    {file = "soupsieve-2.0.1-py3-none-any.whl", hash = "sha256:1634eea42ab371d3d346309b93df7870a88610f0725d47528be902a0d95ecc55"},
+    {file = "soupsieve-2.0.1.tar.gz", hash = "sha256:a59dc181727e95d25f781f0eb4fd1825ff45590ec8ff49eadfd7f1a537cc0232"},
+]
 tangled-up-in-unicode = [
     {file = "tangled_up_in_unicode-0.0.6-py3-none-any.whl", hash = "sha256:5cac4ecf3cf1e76a043bc9ce7b583649324d39bef275aa30e01611a29745b9f8"},
     {file = "tangled_up_in_unicode-0.0.6.tar.gz", hash = "sha256:f463a59e9beb612e7cf801e1721f4eeda9bce25496b0232f30bc3ef5bc61f5ef"},
@@ -2023,6 +2135,10 @@ terminado = [
 testpath = [
     {file = "testpath-0.4.4-py2.py3-none-any.whl", hash = "sha256:bfcf9411ef4bf3db7579063e0546938b1edda3d69f4e1fb8756991f5951f85d4"},
     {file = "testpath-0.4.4.tar.gz", hash = "sha256:60e0a3261c149755f4399a1fff7d37523179a70fdc3abdf78de9fc2604aeec7e"},
+]
+text-unidecode = [
+    {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
+    {file = "text_unidecode-1.3-py2.py3-none-any.whl", hash = "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8"},
 ]
 threadpoolctl = [
     {file = "threadpoolctl-2.1.0-py3-none-any.whl", hash = "sha256:38b74ca20ff3bb42caca8b00055111d74159ee95c4370882bbff2b93d24da725"},
@@ -2114,6 +2230,11 @@ typed-ast = [
     {file = "typed_ast-1.4.1-cp39-cp39-win32.whl", hash = "sha256:b52ccf7cfe4ce2a1064b18594381bccf4179c2ecf7f513134ec2f993dd4ab395"},
     {file = "typed_ast-1.4.1-cp39-cp39-win_amd64.whl", hash = "sha256:3742b32cf1c6ef124d57f95be609c473d7ec4c14d0090e5a5e05a15269fb4d0c"},
     {file = "typed_ast-1.4.1.tar.gz", hash = "sha256:8c8aaad94455178e3187ab22c8b01a3837f8ee50e09cf31f1ba129eb293ec30b"},
+]
+typing = [
+    {file = "typing-3.6.6-py2-none-any.whl", hash = "sha256:a4c8473ce11a65999c8f59cb093e70686b6c84c98df58c1dae9b3b196089858a"},
+    {file = "typing-3.6.6-py3-none-any.whl", hash = "sha256:57dcf675a99b74d64dacf6fba08fb17cf7e3d5fdff53d4a30ea2a5e7e52543d4"},
+    {file = "typing-3.6.6.tar.gz", hash = "sha256:4027c5f6127a6267a435201981ba156de91ad0d1d98e9ddc2aa173453453492d"},
 ]
 typing-extensions = [
     {file = "typing_extensions-3.7.4.3-py2-none-any.whl", hash = "sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f"},
