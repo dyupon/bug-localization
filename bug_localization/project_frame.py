@@ -1,6 +1,5 @@
 import logging
 import git
-import os
 import datetime
 import dateutil.tz
 import pickle
@@ -71,6 +70,8 @@ class ProjectFrame(Frame):
         return len(self.change_authors)
 
     def get_file_length(self):
+        if self.file_name not in self.file_system:
+            return -1
         path = "../" + self.file_system[self.file_name] + "/" + self.file_name
         with open(path, "r") as file:
             try:
