@@ -95,7 +95,7 @@ def process_report(report_id):
                     frame.get_num_days_since_file_changed(commits_hexsha),  # days_since_file_changed
                     frame.get_num_people_changed(),  # num_people_changed
                     get_report_exception_type(report),  # exception_type
-                    frame.get_file_length(),
+                    frame.get_file_length(),  # file_length
                     get_root_cause_check(issue_to_changed[str(issue_id)], frame.get_frame())  # is_rootcause
                 ]
             )
@@ -128,7 +128,7 @@ if __name__ == "__main__":
             "days_since_file_changed",
             "num_people_changed",
             "exception_type",
-            "file_length"
+            "file_length",
             "is_rootcause"
         ]
     )
@@ -138,5 +138,7 @@ if __name__ == "__main__":
         for r in tqdm(issue_to_report["report_id"], desc="Progress")
     )
     res = [x for x in res if x]
+    with open("dataframe.pickle", "wb") as d:
+        pickle.dump(res, d)
     df = pd.DataFrame(res, columns=df.columns)
     df.to_csv("data.csv", index=False)
