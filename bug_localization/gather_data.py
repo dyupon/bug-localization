@@ -137,11 +137,8 @@ if __name__ == "__main__":
         delayed(process_report)(r)
         for r in tqdm(issue_to_report["report_id"], desc="Progress")
     )
-    with open("backup.pickle", "wb") as b:
-        pickle.dump(res, b)
-
-    for d in res:
-        if d:
-            df = df.append(pd.DataFrame(d, columns=df.columns))
-
+    res = [x for x in res if x]
+    with open("dataframe.pickle", "wb") as d:
+        pickle.dump(res, d)
+    df = pd.DataFrame(res, columns=df.columns)
     df.to_csv("data.csv", index=False)

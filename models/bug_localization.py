@@ -16,7 +16,7 @@ from sklearn.model_selection import GridSearchCV
 DIR_OUTPUT = "output/"
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--experiment_name", type=str, default="all reports 2")
+    parser.add_argument("--experiment_name", type=str, default="all reports")
     parser.add_argument("--skip_reports_without_errors", type=str, default="no")
     config = parser.parse_args()
     DIR_OUTPUT += config.experiment_name
@@ -24,7 +24,7 @@ if __name__ == '__main__':
         shutil.rmtree(DIR_OUTPUT)
     os.makedirs(DIR_OUTPUT)
     print("Uploading data...")
-    df = pd.read_csv("data2.csv")
+    df = pd.read_csv("data.csv")
     print("Preprocessing...")
     df.drop("exception_type", axis=1, inplace=True)
     df.dropna(inplace=True)
