@@ -1,0 +1,57 @@
+------------- BASELINE ------------- 
+F1 score for Top1Classifier: 0.013387189844200807 
+Accuracy for reports: 0.2738496071829405 
+Accuracy for most likely rootcauses: 0.06622 
+[[213559   1777]
+ [ 23870    174]]
+ 
+------------- LR GridSearchCV ------------- 
+Best score: 0.19989125226285215 using {'C': 0.01} 
+Mean of scores in CV: [0.00000000e+00 2.38435861e-05 1.12740788e-01 1.99891252e-01
+ 1.99000538e-01] 
+Std of scores in CV: [0.00000000e+00 4.76871722e-05 1.48321632e-01 2.60110976e-01
+ 2.59099865e-01] 
+F1 score for LR Classifier: 0.149 
+Accuracy for reports: 0.522 
+Accuracy for most likely rootcauses: 0.025 
+[[204600  10736]
+ [ 21236   2808]]
+ 
+------------- RF OOB ------------- 
+OOB score: 0.9594752492998585 
+F1 score for OOB RF Classifier: 0.008 
+Accuracy for reports: 0.592 
+Accuracy for most likely rootcauses: 0.095 
+[[214502    834]
+ [ 23949     95]]
+ Feature importance 
+                         importance
+line_number                0.350753
+frame_length               0.297613
+distance_to_top            0.151121
+language                   0.072267
+days_since_file_changed    0.043034
+file_length                0.041651
+num_people_changed         0.033404
+source                     0.010156
+ 
+------------- RF GridSearchCV ------------- 
+Best score: 0.4581871222469772 using {'criterion': 'entropy', 'max_depth': 7, 'max_features': 'auto', 'min_samples_split': 4, 'n_estimators': 3} 
+Mean of scores in CV: [2.64160213e-04 2.64114740e-04 2.15102538e-04 ... 3.32929060e-01
+ 3.31766910e-01 3.23426817e-01] 
+Std of scores in CV: [0.00037769 0.00037768 0.00026709 ... 0.20133288 0.17370574 0.18886303] 
+F1 score for RF Classifier: 0.000 
+Accuracy for reports: 0.648 
+Accuracy for most likely rootcauses: 0.068 
+[[214865    471]
+ [ 24043      1]]
+ Feature importance 
+                         importance
+frame_length               0.288018
+distance_to_top            0.200987
+line_number                0.199188
+days_since_file_changed    0.078025
+language                   0.072963
+file_length                0.072864
+source                     0.068453
+num_people_changed         0.019501

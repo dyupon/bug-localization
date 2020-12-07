@@ -24,7 +24,7 @@ if __name__ == '__main__':
         shutil.rmtree(DIR_OUTPUT)
     os.makedirs(DIR_OUTPUT)
     print("Uploading data...")
-    df = pd.read_csv("data.csv")
+    df = pd.read_csv("data2.csv")
     print("Preprocessing...")
     df.drop("exception_type", axis=1, inplace=True)
     df.dropna(inplace=True)
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     df.set_index("report_id", inplace=True)
 
     X = df[["timestamp", "line_number", "distance_to_top", "language",
-            "source", "frame_length", "days_since_file_changed", "num_people_changed"]]
+            "source", "frame_length", "days_since_file_changed", "num_people_changed", "file_length"]]
     y = df[["is_rootcause"]]
     y.groupby("report_id").sum().plot.hist(bins=[0, 1, 2, 3, 4, 5, 10]).figure.savefig(
         DIR_OUTPUT + "/target_distribution.png")
@@ -83,11 +83,14 @@ if __name__ == '__main__':
     X_train_std = X_train.copy()
     X_test_std = X_test.copy()
     X_train_std[["line_number", "distance_to_top",
-                 "frame_length", "days_since_file_changed", "num_people_changed"]] = scaler.fit_transform(X_train_std[[
-        "line_number", "distance_to_top", "frame_length", "days_since_file_changed", "num_people_changed"]])
+                 "frame_length", "days_since_file_changed", "num_people_changed",
+                 "file_length"]] = scaler.fit_transform(X_train_std[[
+        "line_number", "distance_to_top", "frame_length", "days_since_file_changed", "num_people_changed",
+        "file_length"]])
     X_test_std[["line_number", "distance_to_top",
-                "frame_length", "days_since_file_changed", "num_people_changed"]] = scaler.transform(
-        X_test_std[["line_number", "distance_to_top", "frame_length", "days_since_file_changed", "num_people_changed"]])
+                "frame_length", "days_since_file_changed", "num_people_changed", "file_length"]] = scaler.transform(
+        X_test_std[["line_number", "distance_to_top", "frame_length", "days_since_file_changed", "num_people_changed",
+                    "file_length"]])
 
     grid = {"C": [0.00000001, 0.0001, 0.001, 0.01, 0.1]}
     lr = LogisticRegression(class_weight="auto")

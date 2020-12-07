@@ -1,0 +1,54 @@
+------------- BASELINE ------------- 
+F1 score for Top1Classifier: 0.008267895642542081 
+Accuracy for reports: 0.16883116883116883 
+Accuracy for most likely rootcauses: 0.21678 
+[[95444   637]
+ [49502   209]]
+ 
+------------- LR GridSearchCV ------------- 
+Best score: 0.10715824108475921 using {'C': 0.001} 
+Mean of scores in CV: [0.         0.07938323 0.10715824 0.03441429 0.03443302] 
+Std of scores in CV: [0.         0.12352691 0.1491822  0.05820045 0.05802078] 
+F1 score for LR Classifier: 0.492 
+Accuracy for reports: 0.017 
+Accuracy for most likely rootcauses: 0.095 
+[[93100  2981]
+ [32516 17195]]
+ 
+------------- RF OOB ------------- 
+OOB score: 0.9544387374178054 
+F1 score for OOB RF Classifier: 0.059 
+Accuracy for reports: 0.122 
+Accuracy for most likely rootcauses: 0.354 
+[[94787  1294]
+ [48158  1553]]
+ Feature importance 
+                         importance
+line_number                0.281364
+distance_to_top            0.267626
+frame_length               0.249710
+days_since_file_changed    0.057491
+language                   0.055403
+file_length                0.047555
+num_people_changed         0.030779
+source                     0.010072
+ 
+------------- RF GridSearchCV ------------- 
+Best score: 0.4354606525951016 using {'criterion': 'entropy', 'max_depth': 7, 'max_features': 'log2', 'min_samples_split': 4, 'n_estimators': 9} 
+Mean of scores in CV: [0.00052657 0.00042362 0.00038588 ... 0.26243391 0.2718442  0.25917967] 
+Std of scores in CV: [0.00047005 0.00076229 0.00047646 ... 0.10617475 0.08904762 0.10502372] 
+F1 score for RF Classifier: 0.229 
+Accuracy for reports: 0.020 
+Accuracy for most likely rootcauses: 0.409 
+[[88477  7604]
+ [42299  7412]]
+ Feature importance 
+                         importance
+distance_to_top            0.432302
+frame_length               0.142100
+line_number                0.137676
+days_since_file_changed    0.114648
+language                   0.098744
+file_length                0.041657
+num_people_changed         0.025628
+source                     0.007244
