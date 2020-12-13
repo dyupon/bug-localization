@@ -22,7 +22,17 @@ REPO_PATH = "../../master"
 def get_report_exception_type(report):
     if not report["class"] or report["class"] is None:
         return None
-    return 0 if report["class"][0].startswith("java.") else 1
+    result = None
+    for i, ex in enumerate(report["class"]):
+        if ex.startswith("java.lang."):
+            result = "core"
+        elif ex.startswith("com."):
+            result = "custom"
+        if result == "custom" and ex.startswith("java.lang.") and i > 0:
+            result = "both"
+        if result == "core" and ex.startswith("com.") and i > 0:
+            result = "both"
+    return result
 
 
 def get_report_num_frames(report):
@@ -61,45 +71,53 @@ def get_frame(method_name, file_name, ft, report, report_id, frame_position):
 
 
 def process_report(report_id):
-    issue_id = issue_to_report.loc[issue_to_report["report_id"] == report_id, "issue_id"].values[0]
-    if str(issue_id) in corrupted_issues or str(issue_id) not in issue_to_changed.keys():
-        return None
-    with open("../reports/" + str(report_id) + ".json", "r") as f:
-        try:
-            report = json.load(f)
-        except UnicodeDecodeError as ex:
-            logging.error("Bad source report {} encoding: ".format(report_id))
+    try:
+        issue_id = issue_to_report.loc[issue_to_report["report_id"] == report_id, "issue_id"].values[0]
+        if str(issue_id) in corrupted_issues or str(issue_id) not in issue_to_changed.keys():
             return None
-        commits_hexsha = issue_to_report.loc[
-            issue_to_report["report_id"] == report["id"], "commit_hexsha"
-        ]
-        commits_hexsha = commits_hexsha.values[0].replace("'", "")[1:-1].split(", ")
-        df_upd = []
-        for frame_position in range(0, len(report["frames"])):
-            method_name = report["frames"][frame_position]["method_name"]
-            frame = get_frame(method_name, report["frames"][frame_position]["file_name"], ft,
-                              report, report_id, frame_position)
-            frame.format_fs()
-            df_upd.append(
-                [
-                    report["timestamp"],  # timestamp
-                    frame.get_report_id(),  # report_id
-                    issue_id,  # issue_id
-                    frame.get_file_name(),  # file_name
-                    frame.get_frame(),  # frame
-                    frame.get_line_number(),  # line_number
-                    frame.get_position(),  # distance_to_top
-                    frame.get_language(),  # language
-                    frame.get_file_source(),  # source
-                    frame.get_frame_length(),  # frame_length
-                    frame.get_num_days_since_file_changed(commits_hexsha),  # days_since_file_changed
-                    frame.get_num_people_changed(),  # num_people_changed
-                    get_report_exception_type(report),  # exception_type
-                    frame.get_file_length(),  # file_length
-                    get_root_cause_check(issue_to_changed[str(issue_id)], frame.get_frame())  # is_rootcause
-                ]
-            )
-        return df_upd
+        with open("../reports/" + str(report_id) + ".json", "r") as f:
+            try:
+                report = json.load(f)
+            except UnicodeDecodeError as ex:
+                logging.error("Bad source report {} encoding: ".format(report_id))
+                return None
+            commits_hexsha = issue_to_report.loc[
+                issue_to_report["report_id"] == report["id"], "commit_hexsha"
+            ]
+            commits_hexsha = commits_hexsha.values[0].replace("'", "")[1:-1].split(", ")
+            df_upd = []
+            for frame_position in range(0, len(report["frames"])):
+                method_name = report["frames"][frame_position]["method_name"]
+                frame = get_frame(method_name, report["frames"][frame_position]["file_name"], ft,
+                                  report, report_id, frame_position)
+                frame.format_fs()
+                df_upd.append(
+                    [
+                        report["timestamp"],  # timestamp
+                        frame.get_report_id(),  # report_id
+                        issue_id,  # issue_id
+                        frame.get_file_name(),  # file_name
+                        frame.get_frame(),  # frame
+                        frame.get_line_number(),  # line_number
+                        frame.get_position(),  # distance_to_top
+                        frame.get_language(),  # language
+                        frame.get_file_source(),  # source
+                        frame.get_frame_length(),  # frame_length
+                        frame.get_num_days_since_file_changed(commits_hexsha),  # days_since_file_changed
+                        frame.get_num_people_changed(),  # num_people_changed
+                        get_report_exception_type(report),  # exception_type
+                        frame.get_file_length(),  # file_length
+                        frame.get_method_length(),  # method_length
+                        frame.get_num_of_args(),  # method_num_of_args
+                        frame.get_num_file_lines(),  # file_num_lines
+                        get_root_cause_check(issue_to_changed[str(issue_id)], frame.get_frame())  # is_rootcause
+                    ]
+                )
+            return df_upd
+    except Exception:
+        print(report_id)
+        print(frame.get_frame())
+        raise Exception
 
 
 if __name__ == "__main__":
@@ -129,11 +147,19 @@ if __name__ == "__main__":
             "num_people_changed",
             "exception_type",
             "file_length",
+            "method_length",
+            "method_num_of_args",
+            "file_num_lines",
             "is_rootcause"
         ]
     )
     ft = load_file_tree()
-    res = Parallel(n_jobs=8)(
+
+    # res = []
+    # for r in issue_to_report["report_id"][0:10]:
+    #     res.append(process_report(r))
+
+    res = Parallel(n_jobs=5)(
         delayed(process_report)(r)
         for r in tqdm(issue_to_report["report_id"], desc="Progress")
     )

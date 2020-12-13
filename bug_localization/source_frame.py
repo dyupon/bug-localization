@@ -21,3 +21,9 @@ class SourceFrame(Frame):
 
     def get_method_length(self):
         return 0
+
+    def get_num_of_args(self):
+        return 0
+
+    def get_num_file_lines(self):
+        return 0

@@ -30,17 +30,15 @@ class Frame:
         if self.frame.startswith("java.") or \
                 self.frame.startswith("sun.") or \
                 self.frame.startswith("javax."):
-            return 0
+            return "java"
         if self.file_name is None:
             return None
-        if self.file_name.endswith(".java"):
-            return 0
+        if self.file_name.endswith(".java") or self.file_name == "<generated>":
+            return "java"
         elif self.file_name.endswith(".kt"):
-            return 1
-        elif self.file_name == "<generated>":
-            return -1
+            return "kotlin"
         else:
-            return 2
+            return "other"
 
     def get_file_source(self):
         pass
@@ -64,4 +62,13 @@ class Frame:
         pass
 
     def format_fs(self):
+        pass
+
+    def get_num_days_since_method_changed(self, commits_hexsha: list):
+        pass
+
+    def get_num_of_args(self):
+        pass
+
+    def get_num_file_lines(self):
         pass

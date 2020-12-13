@@ -1,10 +1,13 @@
 import logging
+import re
+
 import git
 import datetime
 import dateutil.tz
 import pickle
 
 from bug_localization.frame import Frame
+from bug_localization.utils import get_matching_bracket
 
 logging.basicConfig(
     filename="gather_data.log",
@@ -36,6 +39,9 @@ class ProjectFrame(Frame):
                 self.file_name += ".kt"
             elif self.file_name + ".scala" in self.file_system:
                 self.file_name += ".scala"
+        self.file = None
+        self.method_open_idx = None
+        self.method_clos_idx = None
 
     def format_fs(self):
         for file in self.file_system:
@@ -71,18 +77,67 @@ class ProjectFrame(Frame):
 
     def get_file_length(self):
         if self.file_name not in self.file_system:
-            return -1
+            return 0
         path = "../" + self.file_system[self.file_name] + "/" + self.file_name
-        with open(path, "r") as file:
+        with open(path, "r") as f:
             try:
-                data = file.read()
+                file = f.read()
+                self.file = file
             except UnicodeDecodeError:
-                return -1
-            return len(data)
+                return None
+            return len(file)
 
     def get_method_length(self):
-        pass
+        if not self.file:
+            return None
+        clean_frame = re.sub("\d", "", self.frame)
+        clean_frame = clean_frame.replace("$", ".")
+        splitted_frame = clean_frame.split(".")
+        if splitted_frame[-1] == "<init>":
+            method_name = splitted_frame[-2]
+        else:
+            splitted_frame = [x for x in splitted_frame if x != ""]
+            method_name = splitted_frame[-1]
+        if not self.line_number:
+            method_pos = self.file.find(method_name)
+            if method_pos == -1:
+                return None
+            method_open_idx = self.file[method_pos:].find("{")
+            method_open_idx += method_pos
+            self.method_open_idx = method_open_idx
+            method_clos_idx = get_matching_bracket(self.file, method_open_idx)
+            self.method_clos_idx = method_clos_idx
+            return method_clos_idx - method_open_idx
+        else:
+            line_to_code = self.file.split("\n")
+            for i, line in reversed(list(enumerate(line_to_code[:self.line_number]))):
+                method_pos = line.find(method_name)
+                if method_pos == -1:
+                    continue
+                if (method_pos > 0 and line[method_pos - 1] != " ") or line_to_code[i-1].find(";") > -1:
+                    continue
+                method_open_idx = "\n".join(line_to_code[i:self.line_number]).find("{") + 1
+                method_open_idx += len("\n".join(line_to_code[:i]))
+                self.method_open_idx = method_open_idx
+                method_clos_idx = get_matching_bracket(self.file, method_open_idx)
+                self.method_clos_idx = method_clos_idx
+                if method_clos_idx - method_open_idx < 0:
+                    return None
+                return method_clos_idx - method_open_idx
+        return 0
 
     def get_file_source(self):
         return 1
 
+    def get_num_of_args(self):
+        if not self.method_open_idx or not self.method_clos_idx or not self.file:
+            return 0
+        reverse_part = self.file[:self.method_open_idx][::-1]
+        args_open_bracket_idx = reverse_part.find("(")
+        args_clos_bracket_idx = reverse_part.find(")")
+        return len(reverse_part[args_clos_bracket_idx:args_open_bracket_idx].split(","))
+
+    def get_num_file_lines(self):
+        if not self.file:
+            return 0
+        return len(self.file.split("\n"))
