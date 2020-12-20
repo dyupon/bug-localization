@@ -17,6 +17,8 @@ jupyter = "^1.0.0"
 sklearn = "^0.0"
 commoncode = "^20.10.20"
 chardet = "^3.0.4"
+nltk = "^3.5"
+catboost = "^0.24.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

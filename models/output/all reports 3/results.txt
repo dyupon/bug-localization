@@ -1,0 +1,66 @@
+------------- BASELINE ------------- 
+F1 score for Top1Classifier: 0.013630385397154358 
+Accuracy for reports: 0.2841614906832298 
+Accuracy for most likely rootcauses: 0.06871 
+[[208701   1681]
+ [ 23068    171]]
+ 
+------------- LR GridSearchCV ------------- 
+Best score: 0.20753709021577732 using {'C': 0.001} 
+Mean of scores in CV: [0.00000000e+00 4.90948506e-05 2.07537090e-01 2.00936903e-01
+ 2.03278281e-01] 
+Std of scores in CV: [0.00000000e+00 6.01287035e-05 2.70075385e-01 2.61260372e-01
+ 2.65189627e-01] 
+F1 score for LR Classifier: 0.163 
+Accuracy for reports: 0.556 
+Accuracy for most likely rootcauses: 0.026 
+[[202344   8038]
+ [ 20458   2781]]
+ 
+------------- RF OOB ------------- 
+OOB score: 0.9617351260124601 
+F1 score for OOB RF Classifier: 0.007 
+Accuracy for reports: 0.616 
+Accuracy for most likely rootcauses: 0.100 
+[[209776    606]
+ [ 23152     87]]
+ Feature importance 
+                         importance
+line_number                0.344764
+frame_length               0.301983
+distance_to_top            0.149221
+language_kotlin            0.068759
+days_since_file_changed    0.032851
+file_num_lines             0.029902
+file_length                0.028232
+num_people_changed         0.018186
+method_length              0.008900
+method_num_of_args         0.006660
+exception_type_custom      0.005499
+source                     0.004917
+language_other             0.000127
+ 
+------------- RF GridSearchCV ------------- 
+Best score: 0.45075843868165705 using {'criterion': 'entropy', 'max_depth': 6, 'max_features': 'auto', 'min_samples_split': 3, 'n_estimators': 5} 
+Mean of scores in CV: [0.         0.         0.07139491 ... 0.2182025  0.23817336 0.25338612] 
+Std of scores in CV: [0.         0.         0.14278983 ... 0.04727874 0.07682882 0.09384921] 
+F1 score for RF Classifier: 0.182 
+Accuracy for reports: 0.668 
+Accuracy for most likely rootcauses: 0.062 
+[[205647   4735]
+ [ 20441   2798]]
+ Feature importance 
+                         importance
+frame_length               0.301180
+distance_to_top            0.237284
+line_number                0.172608
+num_people_changed         0.097919
+file_length                0.064129
+days_since_file_changed    0.062467
+language_kotlin            0.034806
+method_length              0.010893
+file_num_lines             0.008226
+exception_type_custom      0.005493
+method_num_of_args         0.004518
+language_other             0.000476
+source                     0.000000

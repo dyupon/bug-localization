@@ -120,6 +120,23 @@ six = ">=1.9.0"
 webencodings = "*"
 
 [[package]]
+name = "catboost"
+version = "0.24.3"
+description = "Catboost Python Package"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+graphviz = "*"
+matplotlib = "*"
+numpy = ">=1.16.0"
+pandas = ">=0.24.0"
+plotly = "*"
+scipy = "*"
+six = "*"
+
+[[package]]
 name = "certifi"
 version = "2020.6.20"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -253,6 +270,19 @@ python-versions = ">=3.4"
 
 [package.dependencies]
 gitdb = ">=4.0.1,<5"
+
+[[package]]
+name = "graphviz"
+version = "0.15"
+description = "Simple Python interface for Graphviz"
+category = "main"
+optional = false
+python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*"
+
+[package.extras]
+dev = ["tox (>=3)", "flake8", "pep8-naming", "wheel", "twine"]
+docs = ["sphinx (>=1.8)", "sphinx-rtd-theme"]
+test = ["mock (>=3)", "pytest (>=4)", "pytest-mock (>=2)", "pytest-cov"]
 
 [[package]]
 name = "htmlmin"
@@ -683,6 +713,28 @@ pyyaml = ["pyyaml"]
 scipy = ["scipy"]
 
 [[package]]
+name = "nltk"
+version = "3.5"
+description = "Natural Language Toolkit"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+click = "*"
+joblib = "*"
+regex = "*"
+tqdm = "*"
+
+[package.extras]
+all = ["requests", "numpy", "python-crfsuite", "scikit-learn", "twython", "pyparsing", "scipy", "matplotlib", "gensim"]
+corenlp = ["requests"]
+machine_learning = ["gensim", "numpy", "python-crfsuite", "scikit-learn", "scipy"]
+plot = ["matplotlib"]
+tgrep = ["pyparsing"]
+twitter = ["twython"]
+
+[[package]]
 name = "notebook"
 version = "6.1.4"
 description = "A web-based notebook environment for interactive computing"
@@ -858,6 +910,18 @@ description = "Python Imaging Library (Fork)"
 category = "main"
 optional = false
 python-versions = ">=3.6"
+
+[[package]]
+name = "plotly"
+version = "4.14.1"
+description = "An open-source, interactive data visualization library for Python"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+retrying = ">=1.3.3"
+six = "*"
 
 [[package]]
 name = "pluggy"
@@ -1079,6 +1143,17 @@ urllib3 = ">=1.21.1,<1.25.0 || >1.25.0,<1.25.1 || >1.25.1,<1.26"
 [package.extras]
 security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
 socks = ["PySocks (>=1.5.6,!=1.5.7)", "win-inet-pton"]
+
+[[package]]
+name = "retrying"
+version = "1.3.3"
+description = "Retrying"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+six = ">=1.7.0"
 
 [[package]]
 name = "saneyaml"
@@ -1357,7 +1432,7 @@ notebook = ">=4.4.1"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "3143fcd4a8048389246abc711eec6deb27b92ad5477bdec11f55e24c49f43eaa"
+content-hash = "8a6f2a3806df7d46e1174e153026711951c0e2f95b4f8b631b8be57f5b9d324c"
 
 [metadata.files]
 appdirs = [
@@ -1415,6 +1490,23 @@ black = [
 bleach = [
     {file = "bleach-3.2.1-py2.py3-none-any.whl", hash = "sha256:9f8ccbeb6183c6e6cddea37592dfb0167485c1e3b13b3363bc325aa8bda3adbd"},
     {file = "bleach-3.2.1.tar.gz", hash = "sha256:52b5919b81842b1854196eaae5ca29679a2f2e378905c346d3ca8227c2c66080"},
+]
+catboost = [
+    {file = "catboost-0.24.3-cp27-none-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:4d709e7408a6105219c2f6cf00bc4fb48f8903302b1ee4dfd8322224cd78003d"},
+    {file = "catboost-0.24.3-cp27-none-manylinux1_x86_64.whl", hash = "sha256:8ce7318d75080d84fecd69b85302b44a327c8aaf10b673293c7698736e3d868f"},
+    {file = "catboost-0.24.3-cp27-none-win_amd64.whl", hash = "sha256:a3615e93bb616fdbd7ca3260a7cda626e7d6085a5521a2154ce0d8b20970fa6b"},
+    {file = "catboost-0.24.3-cp35-none-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:0b7b0b7ea2e573f3f770de28ecae7f22ce0abcb1afe748df0e07691825a4a4fb"},
+    {file = "catboost-0.24.3-cp35-none-manylinux1_x86_64.whl", hash = "sha256:7b5006a238185f12e3962da45deb6378c30429313f903a9cf5901814f002314b"},
+    {file = "catboost-0.24.3-cp35-none-win_amd64.whl", hash = "sha256:8df0b70b791d6abbb34e50e36dc8b4dc6104decbc096f39c10d756dc8441ab6c"},
+    {file = "catboost-0.24.3-cp36-none-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:50a9a67632d9da017a78ec95793e3f581302833e153b9e4bdb3b45ec269686c5"},
+    {file = "catboost-0.24.3-cp36-none-manylinux1_x86_64.whl", hash = "sha256:0382ff758383880f9a2b4c2b67648dc42282b3f959d06e677b98d917a3c20d12"},
+    {file = "catboost-0.24.3-cp36-none-win_amd64.whl", hash = "sha256:d0f8402abbcdcd0816f07cc8d5cb50ce22044797f9a9a3c62bb526d0002d2a0d"},
+    {file = "catboost-0.24.3-cp37-none-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:253be22a3786354a6b40c4b3a9ec4c40a01f88e72fe55177c1e70e77f197363c"},
+    {file = "catboost-0.24.3-cp37-none-manylinux1_x86_64.whl", hash = "sha256:dfae16339b9292ee658afd2f98d2a87c6f8a3ad30ac20454d90ee73ac27ea644"},
+    {file = "catboost-0.24.3-cp37-none-win_amd64.whl", hash = "sha256:8aaf38052700e66b2bd1974716e2d11c8b91c63304c930c863162ba28a8dc764"},
+    {file = "catboost-0.24.3-cp38-none-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl", hash = "sha256:6b54d6e109d76e980cd1c05772cccbd0e24bcf8d01c5be2fd97ff0e8a7ae2c72"},
+    {file = "catboost-0.24.3-cp38-none-manylinux1_x86_64.whl", hash = "sha256:c07ba6d548e7416e055010655a6234de8cc09578e977575b97b0f46c5a674b45"},
+    {file = "catboost-0.24.3-cp38-none-win_amd64.whl", hash = "sha256:b28dd19d377a18751fac1c96793d021d1ee97d48cd58b2cd57a42b68eb4e21fd"},
 ]
 certifi = [
     {file = "certifi-2020.6.20-py2.py3-none-any.whl", hash = "sha256:8fc0819f1f30ba15bdb34cceffb9ef04d99f420f68eb75d901e9560b8749fc41"},
@@ -1501,6 +1593,10 @@ gitdb = [
 gitpython = [
     {file = "GitPython-3.1.11-py3-none-any.whl", hash = "sha256:6eea89b655917b500437e9668e4a12eabdcf00229a0df1762aabd692ef9b746b"},
     {file = "GitPython-3.1.11.tar.gz", hash = "sha256:befa4d101f91bad1b632df4308ec64555db684c360bd7d2130b4807d49ce86b8"},
+]
+graphviz = [
+    {file = "graphviz-0.15-py2.py3-none-any.whl", hash = "sha256:403b55553b235875fa521023a06d9c29b46f3a956f960d4e0a5b956bca9eb9ce"},
+    {file = "graphviz-0.15.zip", hash = "sha256:2b85f105024e229ec330fe5067abbe9aa0d7708921a585ecc2bf56000bf5e027"},
 ]
 htmlmin = [
     {file = "htmlmin-0.1.12.tar.gz", hash = "sha256:50c1ef4630374a5d723900096a961cff426dff46b48f34d194a81bbe14eca178"},
@@ -1721,6 +1817,9 @@ networkx = [
     {file = "networkx-2.5-py3-none-any.whl", hash = "sha256:8c5812e9f798d37c50570d15c4a69d5710a18d77bafc903ee9c5fba7454c616c"},
     {file = "networkx-2.5.tar.gz", hash = "sha256:7978955423fbc9639c10498878be59caf99b44dc304c2286162fd24b458c1602"},
 ]
+nltk = [
+    {file = "nltk-3.5.zip", hash = "sha256:845365449cd8c5f9731f7cb9f8bd6fd0767553b9d53af9eb1b3abf7700936b35"},
+]
 notebook = [
     {file = "notebook-6.1.4-py3-none-any.whl", hash = "sha256:07b6e8b8a61aa2f780fe9a97430470485bc71262bc5cae8521f1441b910d2c88"},
     {file = "notebook-6.1.4.tar.gz", hash = "sha256:687d01f963ea20360c0b904ee7a37c3d8cda553858c8d6e33fd0afd13e89de32"},
@@ -1864,6 +1963,10 @@ pillow = [
     {file = "Pillow-8.0.1-pp36-pypy36_pp73-manylinux2010_x86_64.whl", hash = "sha256:4b0ef2470c4979e345e4e0cc1bbac65fda11d0d7b789dbac035e4c6ce3f98adb"},
     {file = "Pillow-8.0.1-pp37-pypy37_pp73-win32.whl", hash = "sha256:8de332053707c80963b589b22f8e0229f1be1f3ca862a932c1bcd48dafb18dd8"},
     {file = "Pillow-8.0.1.tar.gz", hash = "sha256:11c5c6e9b02c9dac08af04f093eb5a2f84857df70a7d4a6a6ad461aca803fb9e"},
+]
+plotly = [
+    {file = "plotly-4.14.1-py2.py3-none-any.whl", hash = "sha256:f0462e494d324a1649dee0208ab04fc7a158740488373d31a499f6d691167a04"},
+    {file = "plotly-4.14.1.tar.gz", hash = "sha256:f2a38726ddc7ce185a277c78a41b50bb8cfcfa4f53b45a481417401cadc0454c"},
 ]
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
@@ -2051,6 +2154,9 @@ regex = [
 requests = [
     {file = "requests-2.24.0-py2.py3-none-any.whl", hash = "sha256:fe75cc94a9443b9246fc7049224f75604b113c36acb93f87b80ed42c44cbb898"},
     {file = "requests-2.24.0.tar.gz", hash = "sha256:b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b"},
+]
+retrying = [
+    {file = "retrying-1.3.3.tar.gz", hash = "sha256:08c039560a6da2fe4f2c426d0766e284d3b736e355f8dd24b37367b0bb41973b"},
 ]
 saneyaml = [
     {file = "saneyaml-0.4-py2.py3-none-any.whl", hash = "sha256:f0d5bdd51649f3253ca8c2d9e48c78540c39d9d035810a2cd4406dbeffd8da11"},
