@@ -9,7 +9,7 @@ import nltk
 from catboost import CatBoostClassifier
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn import metrics
-from sklearn.metrics import make_scorer, roc_auc_score
+from sklearn.metrics import roc_auc_score
 from hyperopt import fmin, hp, tpe, Trials, space_eval
 from models.metrics import report_accuracy
 from models.metrics import most_likely_error_accuracy
@@ -18,30 +18,31 @@ from models.utils import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_val_score, StratifiedKFold
 from datetime import datetime
 
-report_accuracy_scorer = make_scorer(report_accuracy)
-most_likely_error_scorer = make_scorer(most_likely_error_accuracy)
 
-
-def f_to_min(hps, X, y, model, scorer="roc_auc", ncv=5, fit_params=None, verbose=None):
+def f_to_min(hps, X, y, X_test, y_test, model, scorer, fit_params=None, verbose=False):
     if verbose:
         model = model(**hps, verbose=verbose)
     else:
         model = model(**hps)
     if fit_params:
-        cv_res = cross_val_score(model, X, y, cv=StratifiedKFold(ncv), scoring=scorer, fit_params=fit_params, n_jobs=-1)
+        model.fit(X, y, **fit_params)
     else:
-        cv_res = cross_val_score(model, X, y, cv=StratifiedKFold(ncv), scoring=scorer, n_jobs=-1)
-    return -cv_res.mean()
+        model.fit(X, y)
+    if scorer == most_likely_error_accuracy:
+        prediction = model.predict_proba(X_test)
+    else:
+        prediction = model.predict(X_test)
+    acc = scorer(y_test, prediction)
+    return -acc
 
 
 DIR_OUTPUT = "output/"
 if __name__ == '__main__':
     startTime = datetime.now()
     parser = argparse.ArgumentParser()
-    parser.add_argument("--experiment_name", type=str, default="skip error-free report 4")
+    parser.add_argument("--experiment_name", type=str, default="test")
     parser.add_argument("--skip_reports_without_errors", type=str, default="yes")
     config = parser.parse_args()
     DIR_OUTPUT += config.experiment_name
@@ -145,11 +146,14 @@ if __name__ == '__main__':
         'iterations': hp.choice('iterations', [100, 150, 300, 500])
     }
     trials_cb = Trials()
-    best_clf = fmin(partial(f_to_min, X=X_train, y=y_train.values.ravel(), model=CatBoostClassifier,
+    best_clf = fmin(partial(f_to_min, X=X_train, y=y_train.values.ravel(),
+                            X_test=X_test, y_test=y_test,
+                            scorer=most_likely_error_accuracy,
+                            model=CatBoostClassifier,
                             fit_params={"cat_features": cat_cols + encode_cols}, verbose=False),
                     space4cb, algo=tpe.suggest, max_evals=100,
                     trials=trials_cb, rstate=np.random.RandomState(42))
-    clf = CatBoostClassifier(**space_eval(space4cb, best_clf))
+    clf = CatBoostClassifier(**space_eval(space4cb, best_clf), verbose=False)
     clf.fit(X_train, y_train.values.ravel(), cat_features=cat_cols + encode_cols)
     cf_proba = clf.predict_proba(X_test)
     clf_val_score = roc_auc_score(y_test, cf_proba[:, 1])
@@ -218,7 +222,9 @@ if __name__ == '__main__':
     }
 
     trials_clf = Trials()
-    best_clf = fmin(partial(f_to_min, X=X_train, y=y_train.values.ravel(), model=RandomForestClassifier),
+    best_clf = fmin(partial(f_to_min, X=X_train, y=y_train.values.ravel(),
+                            X_test=X_test, y_test=y_test, scorer=most_likely_error_accuracy,
+                            model=RandomForestClassifier),
                     space4rf, algo=tpe.suggest, max_evals=100,
                     trials=trials_clf, rstate=np.random.RandomState(42))
     clf = RandomForestClassifier(**space_eval(space4rf, best_clf))
@@ -244,7 +250,7 @@ if __name__ == '__main__':
     """
     LR 
     """
-    print("LR with GridSearchCV...")
+    print("LR with hyperopt...")
     scaler = StandardScaler()
     X_train_std = X_train
     X_test_std = X_test
@@ -257,7 +263,9 @@ if __name__ == '__main__':
     }
 
     trials_clf = Trials()
-    best_clf = fmin(partial(f_to_min, X=X_train_std, y=y_train.values.ravel(), model=LogisticRegression),
+    best_clf = fmin(partial(f_to_min, X=X_train_std, y=y_train.values.ravel(),
+                            X_test=X_test, y_test=y_test, scorer=most_likely_error_accuracy,
+                            model=LogisticRegression),
                     space4lr, algo=tpe.suggest, max_evals=100,
                     trials=trials_clf, rstate=np.random.RandomState(42))
 
